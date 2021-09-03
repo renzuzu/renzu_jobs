@@ -298,7 +298,6 @@ ESX.RegisterServerCallback('renzu_jobs:playerlist', function (source, cb)
         local letters = config.RandomAvatars[initials]
         if v.job == xPlayer.job.name and v.firstname ~= '' and v.firstname ~= nil then
             --table.insert(list, )
-            print("player",v.firstname)
             list[v.identifier] = {id = v.identifier, job = jobtable[v.job][v.job_grade], name = v.name, firstname = v.firstname, lastname = v.lastname, image = 'https://ui-avatars.com/api/?name='..v.firstname..'+'..v.lastname..'&background='..letters.background..'&color='..letters.color..''}
         end
     end
@@ -323,7 +322,6 @@ function SendtoDiscord(webhook,color,title,desc)
 end
 
 function DiscordMessage(xPlayer,action,val,receiver)
-    print(xPlayer,action,val,receiver)
     return "**\nname: **" ..
     GetPlayerName(xPlayer.source) ..
         "**\n Identifier: **" ..
