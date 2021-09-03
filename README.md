@@ -74,3 +74,4 @@ config.inventoryImageUrl = 'https://cfx-nui-'..config.inventory..'/html/img/item
 - Gangwar Feature
 - Raid Feature
 - Odd Job / Task for Each Job/gangs
+- Weapon Tints @ Armory
