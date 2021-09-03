@@ -9,35 +9,52 @@ FIVEM - renzu_jobs - Basic Jobs Utility Needs for Roleplay Gameplay
 - Job Money ( Cash and Black Money )
 - Send Bonus to Employee ( offline player can receive )
 - Fire Employee (offline player can be fire)
+![image](https://user-images.githubusercontent.com/82306584/132060622-8f41c603-2b9d-4a6f-ad5d-7d639a5ac782.png)
+![image](https://user-images.githubusercontent.com/82306584/132060719-b933cbc1-9c67-4a23-98a0-1445054f16f5.png)
+
 # Inventory
 - Boss Inventory ( Grade Level Permmision )
 - Public Inventory ( ex. armory )
 - Personal Inventory ( Player Owned Stash )
+- ![image](https://user-images.githubusercontent.com/82306584/132060788-64ec33a3-ff29-4938-8c32-25329d3766ac.png)
+
 # Job Shop (business)
 - Public Shop ( All Player can buy ) - Income money will go to Job money
 - Private Shop - Want a Private shop for your job? ex. supply shop
 - Item and Weapon Selling Supported
+- ![image](https://user-images.githubusercontent.com/82306584/132060865-575fe3f0-336a-40f7-8b99-43388c2bf4a0.png)
+
 # Crafting
 - Every job can have a crafting table
 - Item Crafting
 - Weapon Crafting
 - Crafting Timer
+![image](https://user-images.githubusercontent.com/82306584/132060924-dd9704ca-80bd-418a-998a-288214fbafa1.png)
+
 # Wardrobe (SKINCHANGER ONLY Supported)
 - Every Job can change its appearance or clothes
 - Wardrobe ( Select Existing Clothes)
+![image](https://user-images.githubusercontent.com/82306584/132060991-138904cc-996d-4c5d-a1d4-cf715f17d3fc.png)
+
 # Weapon Armory
 - Job Grade Permission Per Weapons
 - Customize Your Weapon Attachments
+![image](https://user-images.githubusercontent.com/82306584/132061073-d6fe848f-372b-4341-8dc4-ad4bcb99f306.png)
+
 # Job Vehicle Shop
 - Configurable Vehicle Shop
 - Vehicle Model Pricing Configurable
 - Auto Save to Garage
+- ![image](https://user-images.githubusercontent.com/82306584/132061118-80db182c-ec66-4bd0-8b80-0ff23cedd155.png)
+
 # Job Garage
 - Player Owned Vehicles bought from vehicle will be stored here
 - Any Vehicle can be stored here and it will be register as a job vehicle for this garage
 - Simple Config
 - Payable Lost Vehicles
 - Anti Dupe Vehicle
+- ![image](https://user-images.githubusercontent.com/82306584/132061138-ff70d23d-badb-48cf-841d-5830bff62961.png)
+
 
 # Other important info
 - Each Job Feature can be limit by grade access
@@ -63,8 +80,8 @@ config.inventoryImageUrl = 'https://cfx-nui-'..config.inventory..'/html/img/item
 # Dependency
 - ESX FRAMEWORK (Tested V1 final, ESX LEGACY)
 - ESX Society ( OPTIONAL )
-- Renzu PopUi
-- Renzu_Notify
+- Renzu PopUi - https://github.com/renzuzu/renzu_popui
+- Renzu_Notify - https://github.com/renzuzu/renzu_notify
 
 # TODO
 - Blackmoney Support in Inventory (i forgot silly me)
@@ -75,3 +92,5 @@ config.inventoryImageUrl = 'https://cfx-nui-'..config.inventory..'/html/img/item
 - Raid Feature
 - Odd Job / Task for Each Job/gangs
 - Weapon Tints @ Armory
+- Clothe Index Number in UI
+- REDO Some UI Part Element Responsiveness
