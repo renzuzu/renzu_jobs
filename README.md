@@ -80,8 +80,8 @@ config.inventoryImageUrl = 'https://cfx-nui-'..config.inventory..'/html/img/item
 # Dependency
 - ESX FRAMEWORK (Tested V1 final, ESX LEGACY)
 - ESX Society ( OPTIONAL )
-- Renzu PopUi
-- Renzu_Notify
+- Renzu PopUi - https://github.com/renzuzu/renzu_popui
+- Renzu_Notify - https://github.com/renzuzu/renzu_notify
 
 # TODO
 - Blackmoney Support in Inventory (i forgot silly me)
@@ -93,3 +93,4 @@ config.inventoryImageUrl = 'https://cfx-nui-'..config.inventory..'/html/img/item
 - Odd Job / Task for Each Job/gangs
 - Weapon Tints @ Armory
 - Clothe Index Number in UI
+- REDO Some UI Part Element Responsiveness
