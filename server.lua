@@ -334,6 +334,13 @@ function DiscordMessage(xPlayer,action,val,receiver)
                     receiver
 end
 
+ESX.RegisterServerCallback('renzu_jobs:getJobmoney',function(source, cb, job, type)
+    local source = source
+    local xPlayer = ESX.GetPlayerFromId(source)
+    local money = JobMoney(job)[type]
+    return money or 0
+end)
+
 ESX.RegisterServerCallback('renzu_jobs:sendbonus',function(source, cb, identifier, amount)
     local source = source
     local xPlayer = ESX.GetPlayerFromId(source)
