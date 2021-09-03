@@ -315,7 +315,7 @@
                 //
                 $("#jobmain").prepend(`<article class="leaderboard__profile" id="`+table.players[i].id.replace(":", "")+`">
                 <img src="`+table.players[i].image+`" alt="`+table.players[i].name+`" class="leaderboard__picture">
-                <span onclick="openprofile('`+table.players[i].id+`')" class="leaderboard__name" style="margin-top:20px;width: 300px;
+                <span class="leaderboard__name" style="margin-top:20px;width: 300px;
                 height: 50px;">`+table.players[i].name+`</span>
                 <span id="give" onclick="OpenModalFunction(this,'`+table.players[i].id+`')" class="leaderboard__value" style="
       position: absolute;
