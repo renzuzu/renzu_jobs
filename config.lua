@@ -15,6 +15,7 @@ config.RandomAvatars = { -- if player pedshot is not uploaded yet, we will use I
 -- EXTRA CONFIG
 config.useSociety = false -- if using esx_society, society money will transfer to owned database renzu_jobs.accounts (first load only) -- set this to false if you are unsure, and manually transfer your society money to this script
 config.defaultjob = 'unemployed' -- will be use for firing employee
+config.black_money_item = false -- if true you want to use a black_money as item not accounts from ESX
 
 --IMAGE CONFIG
 config.inventory = 'esx_inventoryhud' -- resource name of your inventory script, with image folder

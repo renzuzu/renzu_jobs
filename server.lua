@@ -620,6 +620,9 @@ end)
 ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amount, item, inv_type, slot)
 	local xPlayer    = ESX.GetPlayerFromId(source)
 	local i = xPlayer.getInventoryItem(item)
+    if item == 'black_money' and not config.black_money_item then
+        i = {count = xPlayer.getAccount('black_money').money}
+    end
     local amount = tonumber(amount)
     --
     local isweapon = string.find(item:upper(), "WEAPON_")
@@ -630,9 +633,12 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
             if isweapon then
                 label = ESX.GetWeaponLabel(item)
                 xPlayer.removeWeapon(item)
-            else
+            elseif item ~= 'black_money' or config.black_money_item and item == 'black_money' then
                 label = ESX.GetItemLabel(item)
                 xPlayer.removeInventoryItem(item, amount)
+            elseif item == 'black_money' and not config.black_money_item then
+                label = 'Black Money'
+                xPlayer.removeAccountMoney('black_money',tonumber(amount))
             end
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You deposit '..label..' x'..amount)
             if config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook then
@@ -643,7 +649,7 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have enough')
             cb(false)
         end
-        if not isweapon and type == 0 and amount > 0 and GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item] >= amount 
+        if not isweapon and type == 0 and tonumber(amount) > 0 and GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item] >= amount 
         or type == 0 and isweapon and GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item]['data'] ~= nil then
             local label = nil
             if isweapon then
@@ -662,9 +668,12 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
                         xPlayer.addWeaponComponent(tostring(item), tostring(v))
                     end
                 end
-            else
+            elseif item ~= 'black_money' or config.black_money_item then
                 label = ESX.GetItemLabel(item)
-                xPlayer.addInventoryItem(item, amount)
+                xPlayer.addInventoryItem(item, tonumber(amount))
+            elseif item == 'black_money' and not config.black_money_item then
+                label = 'Black Money'
+                xPlayer.addAccountMoney('black_money',tonumber(amount))
             end
             removeItem(xPlayer.job.name,item,amount,source,inv_type,xPlayer,slot)
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You withdraw '..label..' x'..amount)
@@ -1052,6 +1061,8 @@ ESX.RegisterServerCallback('renzu_jobs:getPlayerInventory', function(source, cb,
                     item_type = 'weapon'
                     label = ESX.GetWeaponLabel(k)
                     amount = v['data'].ammo
+                elseif k == 'black_money' and not config.black_money_item then
+                    label = 'Black Money'
                 else
                     label = ESX.GetItemLabel(k)
                 end
@@ -1087,6 +1098,11 @@ ESX.RegisterServerCallback('renzu_jobs:getPlayerInventory', function(source, cb,
                 })
             end
         end
+        table.insert(playerinventory, {
+            label = 'Black Money' .. ' x' .. blackMoney,
+            type  = 'account',
+            name = 'black_money'
+        })
         
         cb({
             playerinventory      = playerinventory,
