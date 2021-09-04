@@ -24,8 +24,9 @@ article {
   position: fixed;
   border-radius: 12px 12px 0 0;
   overflow: hidden;
-  background: rgb(4,38,71);
-  background: linear-gradient(90deg, rgba(4,38,71,1) 0%, rgba(0,42,97,0.9164040616246498) 35%, rgba(6,109,193,1) 100%);
+  background: linear-gradient(
+    90deg
+    , rgb(28 28 29) 0%, rgb(28 32 37 / 92%) 35%, rgb(66 69 72) 100%);
   width: 40vw;
   z-index: 999;
 }
@@ -204,10 +205,9 @@ h2 {
 .modal-header {
   padding: 5px 5px;
 color: white;
-background: rgb(4,38,71);
-background: linear-gradient( 
-90deg
-, rgba(4,38,71,1) 0%, rgba(0,42,97,0.9164040616246498) 35%, rgba(6,109,193,1) 100%);
+background: linear-gradient(
+    90deg
+    , rgb(28 28 29) 0%, rgb(28 32 37 / 92%) 35%, rgb(66 69 72) 100%);
 border-radius: 20px;
 border-bottom-right-radius: 0;
 border-bottom-left-radius: 0;

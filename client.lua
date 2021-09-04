@@ -15,10 +15,6 @@ Citizen.CreateThread(function()
     while ESX.GetPlayerData().job == nil do Wait(0) end
     ESX.PlayerData = ESX.GetPlayerData()
     PlayerData = ESX.GetPlayerData()
-    SendNUIMessage({
-        type  = 'css',
-        content = config.css
-    })
 end)
 
 RegisterNetEvent('esx:setJob')
