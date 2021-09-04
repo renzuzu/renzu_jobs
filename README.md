@@ -93,7 +93,7 @@ config.inventoryImageUrl = 'https://cfx-nui-'..config.inventory..'/html/img/item
 - Renzu_Notify - https://github.com/renzuzu/renzu_notify
 
 # TODO
-- Blackmoney Support in Inventory (i forgot silly me)
+- Blackmoney Support in Inventory (i forgot silly me) ✔️
 - Simple Dispatch System (discord channel style)
 - Support Black money requirements in shop
 - Ingame Job Adder/Creator (if many will request, i dont think this is needed at all)
