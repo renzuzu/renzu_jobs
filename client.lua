@@ -698,7 +698,7 @@ Citizen.CreateThread(function()
                     if grade ~= nil and grade >= jobtable['garage']['grade'] then
                         local dist = #(coord - jobtable['garage'].coord)
                         if IsPedInAnyVehicle(PlayerPedId()) then
-                            dist = #(coord - jobtable['garage'].spawn)
+                            dist = #(coord - vector3(jobtable['garage'].spawn.x,jobtable['garage'].spawn.y,jobtable['garage'].spawn.z))
                         end
                         if dist < 3 then
                             local table = {
@@ -717,7 +717,7 @@ Citizen.CreateThread(function()
                                 coord = GetEntityCoords(PlayerPedId())
                                 dist = #(coord - jobtable['garage'].coord)
                                 if IsPedInAnyVehicle(PlayerPedId()) then
-                                    dist = #(coord - jobtable['garage'].spawn)
+                                    dist = #(coord - vector3(jobtable['garage'].spawn.x,jobtable['garage'].spawn.y,jobtable['garage'].spawn.z))
                                 end
                                 Wait(500)
                             end
