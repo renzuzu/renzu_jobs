@@ -25,14 +25,12 @@ end)
 
 local playercache = {}
 function OpenBossMenu()
-    print("gago")
     ESX.TriggerServerCallback("renzu_jobs:playerlist",function(data,jobs,count,admin,myimage,myjob,jobmoney,jobdata)
         playercache = data
         SendNUIMessage({
             type = 'show',
             content = {money = jobmoney, myjob = myjob, jobdata = jobdata, players = data, logo = config.logo}
         })
-        print("supot")
         Wait(50)
         SetNuiFocus(true,true)
         SetNuiFocusKeepInput(false)

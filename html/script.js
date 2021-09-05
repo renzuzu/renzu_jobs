@@ -304,8 +304,7 @@
             for (const i in table.players) {
               
               if (table.players[i].id) {
-
-                if (table.useidentity) {
+                if (table.players[i].firstname !== undefined) {
                   table.players[i].name = ''+table.players[i].firstname+' '+table.players[i].lastname+''
                 }
 
