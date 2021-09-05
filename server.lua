@@ -936,6 +936,23 @@ AddEventHandler('renzu_jobs:updatejob', function(job)
     UpdateJob(xPlayer.identifier, xPlayer.job.name, tonumber(xPlayer.job.grade))
 end)
 
+RegisterNetEvent('renzu_jobs:duty')
+AddEventHandler('renzu_jobs:duty', function(job,state)
+    local source = source
+    local xPlayer    = ESX.GetPlayerFromId(source)
+    local grade = xPlayer.job.grade
+    local job = job
+    local text = 'Onduty'
+    if not state then
+        job = config.Jobs[job]['duty'].offdutyname
+        text = 'Offduty'
+    end
+    xPlayer.setJob(job, grade)
+    Wait(500)
+    TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'Successfully '..text)
+    UpdateJob(xPlayer.identifier, job, grade)
+end)
+
 local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' -- You will need this for encoding/decoding
 -- encoding
 function veh(data)

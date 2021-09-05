@@ -333,7 +333,65 @@
 
         }
 
+        var on_switch = "selected";
+        var off_switch = "not_selected";
+        var offduty = true
+        function duty(state,originaljob) {
+          if (state == true && offduty !== state) {
+            offduty = state
+            var temp = on_switch
+            on_switch = off_switch
+            off_switch = temp;
+            $("#switch_on").attr('class', on_switch);
+            $("#switch_off").attr('class', off_switch);
+            $.post("https://renzu_jobs/duty",JSON.stringify({job:originaljob,state:state}),function(cb) {
+              if (cb) {
+                //$('#modalfunc').html('')
+              }
+            });
+            return
+          } 
+          if (state == false && offduty !== state) {
+            offduty = state
+            var temp = on_switch
+            on_switch = off_switch
+            off_switch = temp;
+            $("#switch_on").attr('class', on_switch);
+            $("#switch_off").attr('class', off_switch);
+            $.post("https://renzu_jobs/duty",JSON.stringify({job:originaljob,state:state}),function(cb) {
+              if (cb) {
+                //$('#modalfunc').html('')
+              }
+            });
+            return
+          }
+        }
+
         function OpenModalFunction(e,id,label,type) {
+          if (e.id == 'duty') {
+            var dutystr = `<div id="duty" class="modal" style="display: block;left: 15%;
+            top: 15%;">
+            <div class="modal-content" style="width:40%;">
+              <div class="modal-header">
+                <span class="close" onclick="CloseModal(true)">×</span>
+                <h2 style="text-align:center;">Doty On/Off - Job: `+type+`<span id="playername"></span></h2>
+              </div>
+              <div class="modal-body" style="    margin: 10px;
+              text-align: center;">
+
+              <div class="containerd" style="margin: 20px;width: 90%;">
+              <div class="flex" style="background: #21222387;padding: 20px;">
+              <a id="switch_on" class="selected" onclick="duty(true,'`+type+`')" style="padding: 10px;
+              background: #bf002c;margin: 5px;">ON</a>
+              <a id="switch_off" class="not_selected" onclick="duty(false,'`+type+`')" style="padding: 10px;
+              background: #bf002c;margin: 5px;">OFF</a>
+              </div>
+              </div>
+              </div>
+            </div>
+            </div>`
+            $('#modalfunc').append(dutystr)
+          }
           if (e.id == 'vehicleshop') {
             var vehicleshop = `<div id="`+e.id+`" class="modal" style="display: block;">
             <div class="modal-content" style="width:40%;">
@@ -1131,8 +1189,13 @@
           });
         }
 
-        function CloseModal() {
+        function CloseModal(cursor) {
           $('#modalfunc').html('')
+          if (cursor) {
+            $.post("https://renzu_jobs/close",{},function(datab){
+              window.location.reload(false); 
+            });
+          }
         }
 
         function openprofile(id) {
@@ -1314,6 +1377,22 @@
             CreateCrafting(crafting,event.content.img)
             imglink = event.content.img
             document.getElementById("craftingmenu").style.display = "block";
+          }
+          if (event.type == 'Duty') {
+            const duty = event.content.duty
+            event.type = undefined
+            $("#logo").attr("src", event.content.logo);
+            
+            OpenModalFunction({id :'duty'},duty.job,duty.off,duty.jobname)
+            off = duty.job == duty.off
+            if (off && offduty) {
+              var temp = on_switch
+              on_switch = off_switch
+              off_switch = temp;
+              offduty = false
+              $("#switch_on").attr('class', on_switch);
+              $("#switch_off").attr('class', off_switch);
+            }
           }
           if (event.type == 'Garage') {
             const garage = event.content.garagedata

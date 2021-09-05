@@ -158,6 +158,13 @@ config.Jobs = {
             spawn = vector4(435.22979736328,-1027.3572998047,28.454689025879,5.9837808609009),
             event = 'renzu_jobs:opengarage',
         },
+        ['duty'] = {
+            grade = 0,
+            offdutyname = 'offpolice',
+            coord = vector3(440.97512817383,-981.16265869141,30.689613342285),
+            label = 'On/Off Duty',
+            event = 'renzu_jobs:duty',
+        },
         ['grade'] = { -- grade access , pay attention to the perms, grade int is the index number of array
             [0] = { -- example grade = 0, ex. cadet? lowest rank, grade can be found in job_grades database table
                 access = {fire = false, withdraw = false, deposit = false, gradechange = false},
@@ -310,6 +317,13 @@ config.Jobs = {
             coord = vector3(-210.30662536621,-1309.2847900391,31.292116165161),
             spawn = vector4(-220.96159362793,-1291.4146728516,30.621912002563,219.47317504883),
             event = 'renzu_jobs:opengarage',
+        },
+        ['duty'] = {
+            grade = 0,
+            offdutyname = 'offmechanic',
+            coord = vector3(-207.6012878418,-1337.5262451172,34.894355773926),
+            label = 'On/Off Duty',
+            event = 'renzu_jobs:duty',
         },
         ['grade'] = { -- grade access , pay attention to the perms, grade int is the index number of array
             [0] = { -- example grade = 0, ex. cadet? lowest rank, grade can be found in job_grades database table

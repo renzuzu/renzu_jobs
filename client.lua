@@ -5,6 +5,7 @@ PlayerData = nil
 inv_type = nil
 cancel = true
 clothingopen = false
+local setjob = false
 local lastSkin, cam, isCameraActive
 local firstSpawn, zoomOffset, camOffset, heading, skinLoaded = true, 0.0, 0.0, 90.0, false
 local clothes = {}
@@ -21,6 +22,9 @@ RegisterNetEvent('esx:setJob')
 AddEventHandler('esx:setJob', function(job)
 	PlayerData.job = job
     TriggerServerEvent('renzu_jobs:updatejob',PlayerData)
+    setjob = true
+    Wait(2000)
+    setjob = false
 end)
 
 local playercache = {}
@@ -71,7 +75,6 @@ function OpenWeaponMenu()
             if PlayerData.job.grade >= v.mingrade then
                 for k,v2 in pairs(weapon) do
                     if v2.name == v.name then
-                        print(v.name)
                         v.owned = true
                         v.install_components = {}
                         for k3,v3 in pairs(v2.components) do
@@ -334,6 +337,7 @@ RegisterNUICallback('close', function(data, cb)
         end
         DeleteSkinCam()
     end
+    cb(true)
 end)
 
 RegisterNUICallback('getinfo', function(data, cb)
@@ -476,6 +480,26 @@ RegisterNUICallback('craftitem', function(data, cb)
     end,data.item,data.amount,data.type)
 end)
 
+RegisterNetEvent('renzu_jobs:duty')
+AddEventHandler('renzu_jobs:duty', function(name,job)
+    OpenDuty(job)
+end)
+
+RegisterNUICallback('duty', function(data, cb)
+    TriggerServerEvent('renzu_jobs:duty',data.job,data.state)
+    cb(true)
+end)
+
+function OpenDuty(job)
+    SendNUIMessage({
+        type = 'Duty',
+        content = {duty = {job = PlayerData.job.name, off = config.Jobs[job]['duty'].offdutyname,jobname = job} ,logo = config.logo, img = config.inventoryImageUrl}
+    })
+    Wait(50)
+    SetNuiFocus(true,true)
+    SetNuiFocusKeepInput(false)
+end
+
 local markers = {}
 
 function ShowFloatingHelpNotification(msg, coords)
@@ -493,7 +517,7 @@ function DrawMarkerInput(vec,msg,event,server,name,job)
             cancel = false
             local ped = PlayerPedId()
             local coord = GetEntityCoords(ped)
-            while #(vec - coord) <= 7 and not cancel do
+            while #(vec - coord) <= 7 and not cancel and not setjob do
                 Citizen.Wait(5)
                 coord = GetEntityCoords(ped)
                 if config.showmarker then
@@ -508,7 +532,7 @@ function DrawMarkerInput(vec,msg,event,server,name,job)
                             TriggerServerEvent(event,name,job)
                         end
                         Wait(100)
-                        while #(vec - coord) < 3 and not cancel do coord = GetEntityCoords(ped) Wait(100) end
+                        while #(vec - coord) < 3 and not cancel and not setjob do coord = GetEntityCoords(ped) Wait(100) end
                         markers[name] = nil
                         break
                     end
@@ -520,7 +544,7 @@ function DrawMarkerInput(vec,msg,event,server,name,job)
     end
 end
 
--- PUBLIC SHOPS
+-- PUBLIC SHOPS && DUTY
 Citizen.CreateThread(function()
     Wait(2000)
     while PlayerData == nil do Wait(10) end
@@ -557,6 +581,32 @@ Citizen.CreateThread(function()
                     end
                 end
             end
+            local v = shop
+            if v['duty'] and #(GetEntityCoords(PlayerPedId()) - v['duty'].coord) < 7 and job == k2 or v['duty'] and #(GetEntityCoords(PlayerPedId()) - v['duty'].coord) < 7 and job == v['duty'].offdutyname then
+                DrawMarkerInput(v['duty'].coord,v['duty'].label,v['duty'].event,false,'duty',k2)
+                if config.usePopui then
+                    local dist = #(coord - v['duty'].coord)
+                    if dist < 3 then
+                        local table = {
+                            ['key'] = 'E', -- key
+                            ['event'] = 'renzu_jobs:duty',
+                            ['title'] = 'Press [E] Open '..v['duty'].label,
+                            ['server_event'] = false, -- server event or client
+                            ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
+                            ['fa'] = '<i class="fal fa-medal"></i>',
+                            ['custom_arg'] = {'shop',k2}, -- example: {1,2,3,4}
+                        }
+                        TriggerEvent('renzu_popui:drawtextuiwithinput',table)
+                        cancel = false
+                        while dist < 3 and not cancel do
+                            coord = GetEntityCoords(PlayerPedId())
+                            dist = #(coord - v['duty'].coord)
+                            Wait(500)
+                        end
+                        TriggerEvent('renzu_popui:closeui')
+                    end
+                end
+            end
         end
         Wait(1000)
     end
@@ -575,6 +625,7 @@ Citizen.CreateThread(function()
         local invehicle = IsPedInAnyVehicle(PlayerPedId())
         if jobtable ~= nil then
             for k,v in pairs(jobtable) do
+                --print(k ~= 'max_salary' , not invehicle , jobtable[k] ~= nil , jobtable[k].coord ~= nil , jobtable[k].coord , coord , grade , jobtable[k].grade)
                 if k ~= 'max_salary' and not invehicle and jobtable[k] ~= nil and jobtable[k].coord ~= nil and #(jobtable[k].coord - coord) < 7 and grade >= jobtable[k].grade then
                     DrawMarkerInput(jobtable[k].coord,jobtable[k].label,jobtable[k].event,false,k)
                 elseif k == 'garage' and invehicle and jobtable[k] ~= nil and jobtable[k].spawn ~= nil and #(vector3(jobtable[k].spawn.x,jobtable[k].spawn.y,jobtable[k].spawn.z) - coord) < 7 and grade >= jobtable[k].grade then
