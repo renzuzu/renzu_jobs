@@ -89,7 +89,7 @@ config.Jobs = {
         ['shop'] = {
             [1] = {
                 webhook = false, -- change this to your webhook link, if this a false, its mean no loggin at all, ex. 'https://discord.com/api/webhooks/883246462****'
-                public = true, -- if shop is public or for this job only. (income money will go to this job money)
+                public = false, -- if shop is public or for this job only. (income money will go to this job money)
                 grade = 0, -- minimum job grade can access this feature,
                 ['items'] = {
                     [1] = {name = 'bread', label = 'Bread', value = 50},

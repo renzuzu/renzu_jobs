@@ -522,14 +522,15 @@ end
 
 -- PUBLIC SHOPS
 Citizen.CreateThread(function()
-    Wait(1000)
+    Wait(200)
     while PlayerData == nil do Wait(10) end
 	while true do
+        local job = PlayerData.job.name
         local coord = GetEntityCoords(PlayerPedId())
         for k2,shop in pairs(config.Jobs) do
             for k,v in ipairs(shop['shop']) do
                 local k = tonumber(k)
-                if v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 7 then
+                if v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 7 or not v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 7 and job == k2 then
                     shopindex = k
                     DrawMarkerInput(v.coord,v.label,v.event,false,'shop',k2)
                     if config.usePopui then
