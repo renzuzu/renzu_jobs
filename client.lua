@@ -522,7 +522,7 @@ end
 
 -- PUBLIC SHOPS
 Citizen.CreateThread(function()
-    Wait(200)
+    Wait(2000)
     while PlayerData == nil do Wait(10) end
 	while true do
         local job = PlayerData.job.name
