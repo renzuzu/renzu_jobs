@@ -168,6 +168,7 @@ RegisterNUICallback('buyvehicle', function(data, cb)
     ESX.TriggerServerCallback("renzu_jobs:buyvehicle",function(a)
         SetNuiFocus(false,false)
         SetNuiFocusKeepInput(false)
+        close()
         cb(a)
     end,data.model)
 end)
@@ -311,6 +312,9 @@ end
 
 RegisterNUICallback('buyitem', function(data, cb)
     ESX.TriggerServerCallback("renzu_jobs:buyitem",function(a)
+        if not a then
+            close()
+        end
         cb(a)
     end,data.item,data.amount,currentshop,shopindex)
 end)
@@ -552,31 +556,33 @@ Citizen.CreateThread(function()
         local job = PlayerData.job.name
         local coord = GetEntityCoords(PlayerPedId())
         for k2,shop in pairs(config.Jobs) do
-            for k,v in ipairs(shop['shop']) do
-                local k = tonumber(k)
-                if v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 7 or not v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 7 and job == k2 then
-                    shopindex = k
-                    DrawMarkerInput(v.coord,v.label,v.event,false,'shop',k2)
-                    if config.usePopui then
-                        local dist = #(coord - v.coord)
-                        if dist < 3 then
-                            local table = {
-                                ['key'] = 'E', -- key
-                                ['event'] = 'renzu_jobs:openshop',
-                                ['title'] = 'Press [E] Open '..v.label,
-                                ['server_event'] = false, -- server event or client
-                                ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                                ['fa'] = '<i class="fal fa-store"></i>',
-                                ['custom_arg'] = {'shop',k2}, -- example: {1,2,3,4}
-                            }
-                            TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                            cancel = false
-                            while dist < 3 and not cancel do
-                                coord = GetEntityCoords(PlayerPedId())
-                                dist = #(coord - v.coord)
-                                Wait(500)
+            if shop['shop'] then
+                for k,v in ipairs(shop['shop']) do
+                    local k = tonumber(k)
+                    if v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 7 or not v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 7 and job == k2 then
+                        shopindex = k
+                        DrawMarkerInput(v.coord,v.label,v.event,false,'shop',k2)
+                        if config.usePopui then
+                            local dist = #(coord - v.coord)
+                            if dist < 3 then
+                                local table = {
+                                    ['key'] = 'E', -- key
+                                    ['event'] = 'renzu_jobs:openshop',
+                                    ['title'] = 'Press [E] Open '..v.label,
+                                    ['server_event'] = false, -- server event or client
+                                    ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
+                                    ['fa'] = '<i class="fal fa-store"></i>',
+                                    ['custom_arg'] = {'shop',k2}, -- example: {1,2,3,4}
+                                }
+                                TriggerEvent('renzu_popui:drawtextuiwithinput',table)
+                                cancel = false
+                                while dist < 3 and not cancel do
+                                    coord = GetEntityCoords(PlayerPedId())
+                                    dist = #(coord - v.coord)
+                                    Wait(500)
+                                end
+                                TriggerEvent('renzu_popui:closeui')
                             end
-                            TriggerEvent('renzu_popui:closeui')
                         end
                     end
                 end
