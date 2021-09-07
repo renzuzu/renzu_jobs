@@ -29,7 +29,7 @@ end)
 
 local playercache = {}
 function OpenBossMenu()
-    ESX.TriggerServerCallback("renzu_jobs:playerlist",function(data,jobs,count,admin,myimage,myjob,jobmoney,jobdata)
+    ESX.TriggerServerCallback("renzu_jobs:playerlist",function(data,count,admin,myimage,myjob,jobmoney,jobdata)
         playercache = data
         SendNUIMessage({
             type = 'show',

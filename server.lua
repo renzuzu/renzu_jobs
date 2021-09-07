@@ -298,12 +298,12 @@ ESX.RegisterServerCallback('renzu_jobs:playerlist', function (source, cb)
         local letters = config.RandomAvatars[initials]
         if v.job == xPlayer.job.name and v.firstname ~= '' and v.firstname ~= nil then
             --table.insert(list, )
-            list[v.identifier] = {id = v.identifier, job = jobtable[v.job][v.job_grade], name = v.name, firstname = v.firstname, lastname = v.lastname, image = 'https://ui-avatars.com/api/?name='..v.firstname..'+'..v.lastname..'&background='..letters.background..'&color='..letters.color..''}
+            list[v.identifier] = {id = v.identifier, job = jobtable[v.job][v.job_grade], name = v.name or v.firstname, firstname = v.firstname, lastname = v.lastname, image = 'https://ui-avatars.com/api/?name='..v.firstname..'+'..v.lastname..'&background='..letters.background..'&color='..letters.color..''}
         end
     end
     local count = 0
     for k,v in pairs(playerinfo) do count = count + 1 end
-    cb(list, whitelistedjobs, count, true,'',xPlayer.job.name,JobMoney(xPlayer.job.name), config.Jobs[xPlayer.job.name])
+    cb(list, count, true,'',xPlayer.job.name,JobMoney(xPlayer.job.name), config.Jobs[xPlayer.job.name])
 end)
 
 function SendtoDiscord(webhook,color,title,desc)
