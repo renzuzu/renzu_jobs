@@ -277,7 +277,7 @@ ESX.RegisterServerCallback('renzu_jobs:playerlist', function (source, cb)
     playerinfo = Database(config.Mysql,'fetchAll','SELECT * FROM users', {})
     local source = tonumber(source)
     local xPlayer = ESX.GetPlayerFromId(source)
-    local jobs = MySQL.Sync.fetchAll('SELECT * FROM job_grades', {})
+    local jobs = Database(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
     local salary = {}
     local job =  xPlayer.job.name
     
@@ -405,7 +405,7 @@ ESX.RegisterServerCallback('renzu_jobs:changesalary', function (source, cb, grad
     local amount = tonumber(amount)
     if config.Jobs[xPlayer.job.name].grade[xPlayer.job.grade]['access'].salarychange then
         if amount <= config.Jobs[xPlayer.job.name]['max_salary'] then
-            MySQL.Async.execute('UPDATE job_grades SET salary = @salary WHERE job_name = @job_name AND grade = @grade', {
+            Database(config.Mysql,'execute','UPDATE job_grades SET salary = @salary WHERE job_name = @job_name AND grade = @grade', {
                 ['@salary']   = amount,
                 ['@job_name'] = xPlayer.job.name,
                 ['@grade']    = grade
@@ -984,7 +984,7 @@ end
 function GenPlate()
     local plate = nil
     if config.Mysql == 'mysql-async' then
-        MySQL.Async.fetchAll('SELECT * FROM owned_vehicles', {}, function (result)
+        Database(config.Mysql,'fetchAll','SELECT * FROM owned_vehicles', {}, function (result)
             local p = veh(tonumber(#result))
             p = p:gsub("=", "")
             total = 7 - p:len()
