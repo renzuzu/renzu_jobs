@@ -60,7 +60,7 @@ function JobMoney(job)
     return ret or {money=0,black_money=0}
 end
 
-function removeMoney(amount,job,source,money_type)
+function removeMoney(amount,job,source,money_type,export)
     local result = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
     local jobaccount = json.decode(result[1].accounts)
     jobaccount[money_type] = tonumber(jobaccount[money_type]) - tonumber(amount)
@@ -68,10 +68,12 @@ function removeMoney(amount,job,source,money_type)
         ['@name'] = job,
         ['@accounts'] = json.encode(jobaccount)
     })
-    TriggerClientEvent('renzu_jobs:updatemoney',source,jobaccount)
+    if not export then
+        TriggerClientEvent('renzu_jobs:updatemoney',source,jobaccount)
+    end
 end
 
-function addMoney(amount,job,source,money_type)
+function addMoney(amount,job,source,money_type,export)
     
     local result = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
     local jobaccount = json.decode(result[1].accounts)
@@ -80,8 +82,22 @@ function addMoney(amount,job,source,money_type)
         ['@name'] = job,
         ['@accounts'] = json.encode(jobaccount)
     })
-    TriggerClientEvent('renzu_jobs:updatemoney',source,jobaccount)
+    if not export then
+        TriggerClientEvent('renzu_jobs:updatemoney',source,jobaccount)
+    end
 end
+
+exports('JobMoney', function(job)
+    return JobMoney(job)
+end)
+
+exports('addMoney', function(amount,job,source,money_type,e)
+    return addMoney(amount,job,source,money_type,e)
+end)
+
+exports('removeMoney', function(amount,job,source,money_type,e)
+    return removeMoney(amount,job,source,money_type,e)
+end)
 
 function addItem(job,item,amount,source,type,xPlayer)
     
