@@ -307,7 +307,12 @@
                 if (table.players[i].firstname !== undefined) {
                   table.players[i].name = ''+table.players[i].firstname+' '+table.players[i].lastname+''
                 }
-
+                var jobdiv = `<span class="leaderboard__name" style="float: left;
+                position: absolute;
+                left: 50px;
+                font-weight: 500;
+                font-size: 11px;
+                top: 10px;"><i class="fad fa-user-tie"></i> `+capitalizeFirstLetter(table.players[i].job)+`</span>`
                 kick = `<i style="color:red;" id="kick" onclick="OpenModalFunction(this,'`+table.players[i].id+`')" class="fad fa-user-times"></i>`
                 var divid = `<span class="leaderboard__name" style="float: left;position: absolute;left: -1.5vw;bottom: 0%;font-weight: 700;font-size: 14px;width: auto;min-width: 55px;background: #0808087d;border-radius: 5px;color: #daebf5;"><i class="fad fa-id-card"></i> `+table.players[i].id+`</span>`
 
@@ -316,6 +321,7 @@
                 <img src="`+table.players[i].image+`" alt="`+table.players[i].name+`" class="leaderboard__picture">
                 <span class="leaderboard__name" style="margin-top:20px;width: 300px;
                 height: 50px;">`+table.players[i].name+`</span>
+                `+jobdiv+`
                 <span id="give" onclick="OpenModalFunction(this,'`+table.players[i].id+`')" class="leaderboard__value" style="
       position: absolute;
       right: 5vw;
@@ -907,7 +913,7 @@
               <label for="`+i+`" aria-label="`+i+`" style="width:90%;">
                 <span></span>
                 
-                `+jobdata.grade[i].label+`
+                `+jobdata.grade[String(i)].label+`
                 
                 <div class="job job--white job--sm" style="background-image: url(img/`+myjob+`/`+i+`.png);
                 background-size: 100% 100%;
@@ -968,20 +974,20 @@
                 <span style="border-width: 0px;
                 background: #0000;"> <i class="fas fa-medal"></i></span>
                 
-                `+jobdata.grade[i].label+`
+                `+jobdata.grade[String(i)].label+`
                 
                 <div id="salaryedit" style="background: #0f2a5d82;
                 padding: 5px;
                 border-radius: 5px;
                 text-align: center;
-                font-family: monospace;"> <i id="salarymanage" onclick="OpenModalFunction(this, '`+i+`','`+jobdata.grade[i].label+`')" style="    position: absolute;
+                font-family: monospace;"> <i id="salarymanage" onclick="OpenModalFunction(this, '`+i+`','`+jobdata.grade[String(i)].label+`')" style="    position: absolute;
                 right: 27%;
                 color: #4ec1a1;
                 background: #162e58;
                 padding: 5px;
                 border-radius: 20%;
                 font-size:21px;
-                top: 30%;" class="fas fa-money-check-edit-alt"></i> `+jobdata.grade[i].salary+`
+                top: 30%;" class="fas fa-money-check-edit-alt"></i> `+jobdata.grade[String(i)].salary+`
                 </div>
               </label>
               </div>`

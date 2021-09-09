@@ -15,7 +15,7 @@ CreateThread(function()
     for k,v in pairs(jobs) do
         
         if jobtable[v.job_name] == nil then jobtable[v.job_name] = {} end
-        if jobtable[v.job_name][v.grade] == nil then jobtable[v.job_name][v.grade] = v.label end
+        if jobtable[v.job_name][tostring(v.grade)] == nil then jobtable[v.job_name][tostring(v.grade)] = v.label end
     end
     for k,v in pairs(existing) do
         registeredjobs[v.name] = v
@@ -280,25 +280,32 @@ ESX.RegisterServerCallback('renzu_jobs:playerlist', function (source, cb)
     local jobs = Database(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
     local salary = {}
     local job =  xPlayer.job.name
-    
-    for i=1, #jobs, 1 do
-        if jobs[i].job_name == job then
-            
-		    salary[tonumber(jobs[i].grade)] = jobs[i]
+    local done = false
+    local count = 0
+    CreateThread(function() -- anti bobo
+        for i=1, #jobs, 1 do
+            if jobs[i].job_name == job then
+                salary[tostring(jobs[i].grade)] = jobs[i]
+            end
         end
-	end
-    for k,v in pairs(config.Jobs[xPlayer.job.name].grade) do
-        v.salary = salary[tonumber(k)].salary
-        v.label = salary[tonumber(k)].label
-        
-    end
+
+        for k,v in pairs(config.Jobs[xPlayer.job.name].grade) do
+            if salary[tostring(k)] then
+                v.salary = salary[tostring(k)].salary
+                v.label = salary[tostring(k)].label
+            end
+        end
+        done = true
+    end)
+    while not done and count < 2000 do count = count + 100 Wait(1) end
     local list = {}
     for k,v in pairs(playerinfo) do
         local initials = math.random(1,#config.RandomAvatars)
         local letters = config.RandomAvatars[initials]
-        if v.job == xPlayer.job.name and v.firstname ~= '' and v.firstname ~= nil then
+        if v.identifier ~= nil and v.job ~= nil and v.job == xPlayer.job.name and v.firstname ~= '' and v.firstname ~= nil then
             --table.insert(list, )
-            list[v.identifier] = {id = v.identifier, job = jobtable[v.job][v.job_grade], name = v.name or v.firstname, firstname = v.firstname, lastname = v.lastname, image = 'https://ui-avatars.com/api/?name='..v.firstname..'+'..v.lastname..'&background='..letters.background..'&color='..letters.color..''}
+            if jobtable[v.job] == nil then jobtable[xPlayer.job.name] = {} end
+            list[v.identifier] = {id = v.identifier, job = jobtable[v.job][tostring(v.job_grade)], name = v.name or v.firstname, firstname = v.firstname, lastname = v.lastname, image = 'https://ui-avatars.com/api/?name='..v.firstname..'+'..v.lastname..'&background='..letters.background..'&color='..letters.color..''}
         end
     end
     local count = 0
