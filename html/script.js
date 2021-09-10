@@ -307,12 +307,16 @@
                 if (table.players[i].firstname !== undefined) {
                   table.players[i].name = ''+table.players[i].firstname+' '+table.players[i].lastname+''
                 }
+                var jobname = ''
+                if (table.players[i].job) {
+                  jobname = capitalizeFirstLetter(table.players[i].job)
+                }
                 var jobdiv = `<span class="leaderboard__name" style="float: left;
                 position: absolute;
                 left: 50px;
                 font-weight: 500;
                 font-size: 11px;
-                top: 10px;"><i class="fad fa-user-tie"></i> `+capitalizeFirstLetter(table.players[i].job)+`</span>`
+                top: 10px;"><i class="fad fa-user-tie"></i> `+jobname+`</span>`
                 kick = `<i style="color:red;" id="kick" onclick="OpenModalFunction(this,'`+table.players[i].id+`')" class="fad fa-user-times"></i>`
                 var divid = `<span class="leaderboard__name" style="float: left;position: absolute;left: -1.5vw;bottom: 0%;font-weight: 700;font-size: 14px;width: auto;min-width: 55px;background: #0808087d;border-radius: 5px;color: #daebf5;"><i class="fad fa-id-card"></i> `+table.players[i].id+`</span>`
 

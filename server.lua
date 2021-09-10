@@ -511,7 +511,11 @@ ESX.RegisterServerCallback('renzu_jobs:withdraw_deposit',function(source, cb, ty
         local dperm = config.Jobs[xPlayer.job.name] ~= nil and config.Jobs[xPlayer.job.name].grade[xPlayer.job.grade]['access'].deposit
         if wperm and type == 0 and tonumber(amount) > 0 and JobMoney(xPlayer.job.name)[money_type] >= tonumber(amount) then
             removeMoney(tonumber(amount),xPlayer.job.name,source,money_type)
-            xPlayer.addAccountMoney(money_type, tonumber(amount))
+            if xPlayer.getAccount(money_type) == nil then -- money accounts does not exist in ancient frameworks, only bank and black_money
+                xPlayer.addMoney(amount)
+            else
+                xPlayer.addAccountMoney(money_type, tonumber(amount))
+            end
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You Withdraw '..amount..' from '..xPlayer.job.name..' money')
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Withdraw',amount,money_type))
@@ -524,7 +528,7 @@ ESX.RegisterServerCallback('renzu_jobs:withdraw_deposit',function(source, cb, ty
         
         local esxold = false
         local account = xPlayer.getAccount(money_type)
-        if account.money == nil and money_type ~= 'black_money' then
+        if money_type ~= 'black_money' and account == nil then -- assume a old esx if this account is nil, ancient framework only have bank and black_money
             account = {}
             account.money = xPlayer.getMoney()
             esxold = true
