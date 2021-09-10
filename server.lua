@@ -512,7 +512,7 @@ ESX.RegisterServerCallback('renzu_jobs:withdraw_deposit',function(source, cb, ty
         if wperm and type == 0 and tonumber(amount) > 0 and JobMoney(xPlayer.job.name)[money_type] >= tonumber(amount) then
             removeMoney(tonumber(amount),xPlayer.job.name,source,money_type)
             if xPlayer.getAccount(money_type) == nil then -- money accounts does not exist in ancient frameworks, only bank and black_money
-                xPlayer.addMoney(amount)
+                xPlayer.addMoney(tonumber(amount))
             else
                 xPlayer.addAccountMoney(money_type, tonumber(amount))
             end
