@@ -29,11 +29,11 @@ end)
 
 local playercache = {}
 function OpenBossMenu()
-    ESX.TriggerServerCallback("renzu_jobs:playerlist",function(data,count,admin,myimage,myjob,jobmoney,jobdata)
+    ESX.TriggerServerCallback("renzu_jobs:playerlist",function(data,count,admin,myimage,myjob,jobmoney,jobdata,online)
         playercache = data
         SendNUIMessage({
             type = 'show',
-            content = {money = jobmoney, myjob = myjob, jobdata = jobdata, players = data, logo = config.logo}
+            content = {money = jobmoney, myjob = myjob, jobdata = jobdata, players = data, logo = config.logo, online = online}
         })
         Wait(50)
         SetNuiFocus(true,true)
@@ -459,6 +459,7 @@ RegisterNUICallback('setjob', function(data, cb)
     ESX.TriggerServerCallback("renzu_jobs:setjob",function(a)
         cb(a)
     end,data.grade,data.id)
+    close()
 end)
 
 RegisterNetEvent('renzu_jobs:opencrafting')

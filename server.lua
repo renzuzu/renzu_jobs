@@ -315,6 +315,15 @@ ESX.RegisterServerCallback('renzu_jobs:playerlist', function (source, cb)
     end)
     while not done and count < 2000 do count = count + 100 Wait(1) end
     local list = {}
+    local online = {}
+    local xPlayers = ESX.GetPlayers()
+    local mycoord = GetEntityCoords(GetPlayerPed(source))
+    for i=1, #xPlayers, 1 do
+        local toPlayer = ESX.GetPlayerFromId(xPlayers[i])
+        if #(mycoord - GetEntityCoords(GetPlayerPed(toPlayer.source))) < 50 and xPlayer.job.name ~= toPlayer.job.name then
+            table.insert(online,{name = toPlayer.name, id = toPlayer.identifier})
+        end
+    end
     for k,v in pairs(playerinfo) do
         local initials = math.random(1,#config.RandomAvatars)
         local letters = config.RandomAvatars[initials]
@@ -326,7 +335,7 @@ ESX.RegisterServerCallback('renzu_jobs:playerlist', function (source, cb)
     end
     local count = 0
     for k,v in pairs(playerinfo) do count = count + 1 end
-    cb(list, count, true,'',xPlayer.job.name,JobMoney(xPlayer.job.name), config.Jobs[xPlayer.job.name])
+    cb(list, count, true,'',xPlayer.job.name,JobMoney(xPlayer.job.name), config.Jobs[xPlayer.job.name],online)
 end)
 
 function SendtoDiscord(webhook,color,title,desc)

@@ -5,6 +5,7 @@
         let ownedvehicles = {}
         let craftables = {}
         let imglink = ''
+        let online = {}
 
         function formatsecond(s) {
           var timestamp = s;
@@ -884,6 +885,51 @@
             </div>`
             $('#modalfunc').append(give)
           }
+
+          if (e.id == 'hire') {
+            var onlineplayers = `<div id="`+e.id+`" class="modal" style="display: block;">
+            <div class="modal-content" style="width:50%;background: #00000094;">
+              <div class="modal-header">
+                <span class="close" onclick="CloseModal()">×</span>
+                <h2 style="text-align:center;">Hire New Citizen <span id="playername"></span></h2>
+              </div>
+              <div class="modal-body">
+              <div class="container">
+                <form name="onlineplayers" id="onlineplayers" style="    max-width: 99%;
+                margin: 10px;
+                padding: 20px 20px;
+                border-radius: 8px;
+                height: auto;
+                overflow-x: hidden;
+                max-height: 70vh;
+                background: #1e1e1f21;">
+
+                </form>
+              </div>
+              </div>
+            </div>
+            </div>`
+            $('#modalfunc').append(onlineplayers)
+            for (const i in online) {
+              console.log(online[i].id)
+              var onlinestring = `<div id="`+online[i].id.replace(":", "")+`_player" class="option" style="width:100%;background: #0000003b;
+              margin-top: 5px;
+              color: #bbe6ff;
+              font-family: 'Font Awesome 5 Free';border-radius:5px">
+              <input type="radio" name="serverid" id="`+online[i].id+`" value="`+online[i].id+`" onclick="hireplayer('`+online[i].id+`','`+online[i].id.replace(":", "")+`')">
+              <label for="`+online[i].id+`" aria-label="`+online[i].id+`" style="width:90%;">
+                <span></span>
+                `+online[i].name+`
+                <div class="job job--white job--sm" style="background-image: url(img/`+online[i].id+`/`+i+`.png);
+                background-size: 100% 100%;
+                background-repeat: no-repeat;">
+                </div>
+              </label>
+              </div>`
+              $('#onlineplayers').prepend(onlinestring)
+            }
+          }
+
           if (e.id == 'grade') {
             var jobgrade = `<div id="`+e.id+`" class="modal" style="display: block;">
             <div class="modal-content" style="width:50%;background: #00000094;">
@@ -1264,6 +1310,14 @@
           $.post("https://renzu_jobs/give",{},function(data){});
         }
 
+        function hireplayer(id,div) {
+          $('#'+div+'_player').html('')
+          $.post("https://renzu_jobs/setjob",JSON.stringify({grade:0,id:id}),function(cb){
+            if (cb) {
+              
+            }
+          });
+        }
         function buy(id) {
           
           //document.getElementById("main").innerHTML = '';
@@ -1332,6 +1386,7 @@
             }
             $("#logo").attr("src", event.content.logo);
             Addplayers(event.content)
+            online = event.content.online
             document.getElementById("jobmenu").style.display = "block";
             //document.getElementById("count").innerHTML = event.content.count;
             //document.getElementById("max").innerHTML = event.content.max;
