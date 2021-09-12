@@ -8,9 +8,9 @@ TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 CreateThread(function()
     Wait(200)
     local registeredjobs = {}
-    playerinfo = Database(config.Mysql,'fetchAll','SELECT * FROM users', {})
-    jobs = Database(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
-    existing = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs', {})
+    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users', {})
+    jobs = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
+    existing = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs', {})
     
     for k,v in pairs(jobs) do
         
@@ -22,7 +22,7 @@ CreateThread(function()
     end
     for k,v in pairs(config.Jobs) do
         if registeredjobs[k] == nil then
-            Database(config.Mysql,'execute','INSERT INTO renzu_jobs (name, accounts, inventory, garage) VALUES (@name, @accounts, @inventory, @garage)', {
+            SqlFunc(config.Mysql,'execute','INSERT INTO renzu_jobs (name, accounts, inventory, garage) VALUES (@name, @accounts, @inventory, @garage)', {
                 ['@name']   = k,
                 ['@accounts']   = json.encode({money = 0, black_money = 0}),
                 ['@inventory']   = '[]',
@@ -33,12 +33,12 @@ CreateThread(function()
     if config.useSociety then
         for k,v in pairs(config.Jobs) do
             TriggerEvent("esx_addonaccount:getSharedAccount","society_"..k,function(account)
-                local result = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = k})
+                local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = k})
                 if result[1] and account.money > 0 then
                     local account = account
                     local jobaccount = json.decode(result[1].accounts)
                     jobaccount['money'] = jobaccount['money'] + account.money -- transfer
-                    Database(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
+                    SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
                         ['@name'] = name,
                         ['@accounts'] = json.encode(jobaccount)
                     })
@@ -54,17 +54,17 @@ CreateThread(function()
 end)
 
 function JobMoney(job)
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
     local ret = json.decode(result[1].accounts)
     
     return ret or {money=0,black_money=0}
 end
 
 function removeMoney(amount,job,source,money_type,export)
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
     local jobaccount = json.decode(result[1].accounts)
     jobaccount[money_type] = tonumber(jobaccount[money_type]) - tonumber(amount)
-    Database(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
+    SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
         ['@name'] = job,
         ['@accounts'] = json.encode(jobaccount)
     })
@@ -75,10 +75,10 @@ end
 
 function addMoney(amount,job,source,money_type,export)
     
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
     local jobaccount = json.decode(result[1].accounts)
     jobaccount[money_type] = tonumber(jobaccount[money_type]) + tonumber(amount)
-    Database(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
+    SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
         ['@name'] = job,
         ['@accounts'] = json.encode(jobaccount)
     })
@@ -101,7 +101,7 @@ end)
 
 function addItem(job,item,amount,source,type,xPlayer)
     
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
     local inventory = json.decode(result[1].inventory)
     local slots = config.Jobs[job]['inventory'][type].slots
     local foundslot = false
@@ -113,7 +113,7 @@ function addItem(job,item,amount,source,type,xPlayer)
                 local i = tostring(i)
                 if inventory[type][xPlayer.identifier][i] ~= nil then  -- checking if slot is not nil
                     if inventory[type][xPlayer.identifier][i][item] ~= nil then -- checking if item is already in slot
-                        foundslot = true -- ignore more condition checks below and save to database
+                        foundslot = true -- ignore more condition checks below and save to SqlFunc
                         inventory[type][xPlayer.identifier][i][item] = inventory[type][xPlayer.identifier][i][item] + tonumber(amount)
                         break
                     end
@@ -183,7 +183,7 @@ function addItem(job,item,amount,source,type,xPlayer)
             end
         end
     end
-    Database(config.Mysql,'execute','UPDATE renzu_jobs SET inventory = @inventory WHERE name = @name', {
+    SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET inventory = @inventory WHERE name = @name', {
         ['@name'] = job,
         ['@inventory'] = json.encode(inventory)
     })
@@ -191,7 +191,7 @@ end
 
 function removeItem(job,item,amount,source,type,xPlayer,slot)
     
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
     local inventory = json.decode(result[1].inventory)
     if type == 'Personal' then
         if string.find(item:upper(), "WEAPON_") then
@@ -212,7 +212,7 @@ function removeItem(job,item,amount,source,type,xPlayer,slot)
             end
         end
     end
-    Database(config.Mysql,'execute','UPDATE renzu_jobs SET inventory = @inventory WHERE name = @name', {
+    SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET inventory = @inventory WHERE name = @name', {
         ['@name'] = job,
         ['@inventory'] = json.encode(inventory)
     })
@@ -220,7 +220,7 @@ end
 
 function GetItems(job,type,xPlayer)
     
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
     local inventory = json.decode(result[1].inventory)
     if inventory[type] == nil then inventory[type] = {} end
     if type == 'Personal' then
@@ -233,11 +233,11 @@ function GetItems(job,type,xPlayer)
 end
 
 function SaveClothes(clothename,clothe,xPlayer)
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM saveclothes WHERE identifier = @identifier', {['@identifier'] = xPlayer.identifier})
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM saveclothes WHERE identifier = @identifier', {['@identifier'] = xPlayer.identifier})
     if result[1] == nil then -- save new wardrobe to db
         local wardrobe = {}
         wardrobe[clothename] = clothe
-        Database(config.Mysql,'execute','INSERT INTO saveclothes (identifier, wardrobe) VALUES (@identifier, @wardrobe)', {
+        SqlFunc(config.Mysql,'execute','INSERT INTO saveclothes (identifier, wardrobe) VALUES (@identifier, @wardrobe)', {
             ['@identifier']   = xPlayer.identifier,
             ['@wardrobe']   = json.encode(wardrobe)
         })
@@ -246,13 +246,13 @@ function SaveClothes(clothename,clothe,xPlayer)
         local wardrobe = json.decode(result[1].wardrobe)
         
         wardrobe[clothename] = clothe
-        Database(config.Mysql,'execute','UPDATE saveclothes SET wardrobe = @wardrobe WHERE identifier = @identifier', {
+        SqlFunc(config.Mysql,'execute','UPDATE saveclothes SET wardrobe = @wardrobe WHERE identifier = @identifier', {
             ['@identifier'] = xPlayer.identifier,
             ['@wardrobe'] = json.encode(wardrobe)
         })
     end
     -- save skin
-    Database(config.Mysql,'execute','UPDATE users SET skin = @skin WHERE identifier = @identifier', {
+    SqlFunc(config.Mysql,'execute','UPDATE users SET skin = @skin WHERE identifier = @identifier', {
 		['@skin'] = json.encode(clothe),
 		['@identifier'] = xPlayer.identifier
 	})
@@ -261,14 +261,14 @@ end
 ESX.RegisterServerCallback('renzu_jobs:selectclothe',function(source, cb, skin)
     local source = tonumber(source)
     local xPlayer = ESX.GetPlayerFromId(source)
-    Database(config.Mysql,'execute','UPDATE users SET skin = @skin WHERE identifier = @identifier', {
+    SqlFunc(config.Mysql,'execute','UPDATE users SET skin = @skin WHERE identifier = @identifier', {
         ['@skin'] = json.encode(skin),
         ['@identifier'] = xPlayer.identifier
     })
 end)
 
 function UpdateJob(identifier, job, grade)
-    Database(config.Mysql,'execute','UPDATE users SET job = @job, job_grade = @job_grade WHERE identifier = @identifier',
+    SqlFunc(config.Mysql,'execute','UPDATE users SET job = @job, job_grade = @job_grade WHERE identifier = @identifier',
         {
             ['@job'] = job,
             ['@job_grade'] = grade,
@@ -277,11 +277,11 @@ function UpdateJob(identifier, job, grade)
 end
 
 function addMoneyOffline(identifier,amount)
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM users WHERE identifier = @identifier', {['@identifier'] = identifier})
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users WHERE identifier = @identifier', {['@identifier'] = identifier})
     if result[1] then
         local res = json.decode(result[1].accounts)
         res['bank'] = res['bank'] + amount
-        Database(config.Mysql,'execute','UPDATE users SET accounts = @accounts WHERE identifier = @identifier',
+        SqlFunc(config.Mysql,'execute','UPDATE users SET accounts = @accounts WHERE identifier = @identifier',
         {
             ['@accounts'] = json.encode(res),
             ['@identifier'] = identifier
@@ -290,10 +290,10 @@ function addMoneyOffline(identifier,amount)
 end
 
 ESX.RegisterServerCallback('renzu_jobs:playerlist', function (source, cb)
-    playerinfo = Database(config.Mysql,'fetchAll','SELECT * FROM users', {})
+    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users', {})
     local source = tonumber(source)
     local xPlayer = ESX.GetPlayerFromId(source)
-    local jobs = Database(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
+    local jobs = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
     local salary = {}
     local job =  xPlayer.job.name
     local done = false
@@ -437,7 +437,7 @@ ESX.RegisterServerCallback('renzu_jobs:changesalary', function (source, cb, grad
     local amount = tonumber(amount)
     if config.Jobs[xPlayer.job.name].grade[xPlayer.job.grade]['access'].salarychange then
         if amount <= config.Jobs[xPlayer.job.name]['max_salary'] then
-            Database(config.Mysql,'execute','UPDATE job_grades SET salary = @salary WHERE job_name = @job_name AND grade = @grade', {
+            SqlFunc(config.Mysql,'execute','UPDATE job_grades SET salary = @salary WHERE job_name = @job_name AND grade = @grade', {
                 ['@salary']   = amount,
                 ['@job_name'] = xPlayer.job.name,
                 ['@grade']    = grade
@@ -574,7 +574,7 @@ ESX.RegisterServerCallback('renzu_jobs:setjob',function(source, cb, grade, ident
                 notify = 'warning'
             end
             toPlayer.setJob(xPlayer.job.name, tonumber(grade))
-            playerinfo = Database(config.Mysql,'fetchAll','SELECT * FROM users', {})
+            playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users', {})
             Wait(100)
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You '..text..' '..toPlayer.name..' as a '..xPlayer.job.grade_label)
             TriggerClientEvent('renzu_notify:Notify',toPlayer.source, notify,'Job', 'You have been '..text..' by '..xPlayer.name..' to '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label)
@@ -596,7 +596,7 @@ ESX.RegisterServerCallback('renzu_jobs:setjob',function(source, cb, grade, ident
                 end
             end
             UpdateJob(identifier, xPlayer.job.name, tonumber(grade))
-            playerinfo = Database(config.Mysql,'fetchAll','SELECT * FROM users', {})
+            playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users', {})
             Wait(100)
             
             if tonumber(jobgrade) > tonumber(grade) then
@@ -854,7 +854,7 @@ end)
 
 ESX.RegisterServerCallback('renzu_jobs:getPlayerWardrobe', function(source, cb)
     local xPlayer    = ESX.GetPlayerFromId(source)
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM saveclothes WHERE identifier = @identifier', {['@identifier'] = xPlayer.identifier})
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM saveclothes WHERE identifier = @identifier', {['@identifier'] = xPlayer.identifier})
     local wardrobe = {}
     if result[1] then
         wardrobe = json.decode(result[1].wardrobe)
@@ -864,11 +864,11 @@ end)
 
 ESX.RegisterServerCallback('renzu_jobs:getvehicles', function(source, cb)
     local xPlayer    = ESX.GetPlayerFromId(source)
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM owned_vehicles WHERE owner = @owner', {['@owner'] = xPlayer.identifier})
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM owned_vehicles WHERE owner = @owner', {['@owner'] = xPlayer.identifier})
     local garage = {}
     if result[1] then
         if config.Jobs[xPlayer.job.name]['garage'].unique then
-            local jobgarage = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {
+            local jobgarage = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {
                 ['@name'] = xPlayer.job.name
             })
             
@@ -888,7 +888,7 @@ ESX.RegisterServerCallback('renzu_jobs:getvehicles', function(source, cb)
             garage = result
         end
     end
-    vehicles = Database(config.Mysql,'fetchAll','SELECT * FROM vehicles', {})
+    vehicles = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM vehicles', {})
     
     cb(garage,vehicles)
 end)
@@ -896,14 +896,14 @@ end)
 ESX.RegisterServerCallback('renzu_jobs:takeoutvehicle', function(source, cb, plate)
     local xPlayer    = ESX.GetPlayerFromId(source)
     
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM owned_vehicles WHERE owner = @owner AND plate = @plate', {
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM owned_vehicles WHERE owner = @owner AND plate = @plate', {
         ['@owner'] = xPlayer.identifier,
         ['@plate'] = plate
     })
     local garage = {}
     
     if result[1] then
-        Database(config.Mysql,'execute','UPDATE owned_vehicles SET stored = @stored WHERE plate = @plate', {
+        SqlFunc(config.Mysql,'execute','UPDATE owned_vehicles SET stored = @stored WHERE plate = @plate', {
             ['@plate'] = plate,
             ['@stored'] = 0,
         })
@@ -918,20 +918,20 @@ end)
 ESX.RegisterServerCallback('renzu_jobs:storevehicle', function(source, cb, plate, prop)
     local xPlayer    = ESX.GetPlayerFromId(source)
     
-    local result = Database(config.Mysql,'fetchAll','SELECT * FROM owned_vehicles WHERE owner = @owner AND plate = @plate', {
+    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM owned_vehicles WHERE owner = @owner AND plate = @plate', {
         ['@owner'] = xPlayer.identifier,
         ['@plate'] = plate
     })
     local garage = {}
     
     if result[1] then
-        Database(config.Mysql,'execute','UPDATE owned_vehicles SET stored = @stored, vehicle = @vehicle WHERE plate = @plate', {
+        SqlFunc(config.Mysql,'execute','UPDATE owned_vehicles SET stored = @stored, vehicle = @vehicle WHERE plate = @plate', {
             ['@plate'] = plate,
             ['@vehicle'] = json.encode(prop),
             ['@stored'] = 1,
         })
         if config.Jobs[xPlayer.job.name]['garage'].unique then
-            local result = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {
+            local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {
                 ['@name'] = xPlayer.job.name
             })
             local vehicles = {}
@@ -939,7 +939,7 @@ ESX.RegisterServerCallback('renzu_jobs:storevehicle', function(source, cb, plate
                 vehicles = json.decode(result[1].garage)
                 vehicles[plate] = 1
             end
-            Database(config.Mysql,'execute','UPDATE renzu_jobs SET garage = @garage WHERE name = @name', {
+            SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET garage = @garage WHERE name = @name', {
                 ['@name'] = xPlayer.job.name,
                 ['@garage'] = json.encode(vehicles),
             })
@@ -1020,7 +1020,7 @@ end
 function GenPlate()
     local plate = nil
     if config.Mysql == 'mysql-async' then
-        Database(config.Mysql,'fetchAll','SELECT * FROM owned_vehicles', {}, function (result)
+        MySQL.Async.fetchAll('SELECT * FROM owned_vehicles', {}, function(result)
             local p = veh(tonumber(#result))
             p = p:gsub("=", "")
             total = 7 - p:len()
@@ -1057,14 +1057,13 @@ ESX.RegisterServerCallback('renzu_jobs:buyvehicle', function(source, cb, model)
                 if xPlayer.getMoney() >= tonumber(v.value) then
                     xPlayer.removeMoney(tonumber(v.value))
                     local plate = GenPlate()
-                    
-                    Database(config.Mysql,'execute','INSERT INTO owned_vehicles (plate, vehicle, owner, stored) VALUES (@plate, @vehicle, @owner, @stored)', {
+                    SqlFunc(config.Mysql,'execute','INSERT INTO owned_vehicles (plate, vehicle, owner, stored) VALUES (@plate, @vehicle, @owner, @stored)', {
                         ['@plate']   = plate,
                         ['@vehicle']   = json.encode({model = GetHashKey(model), plate = plate}),
                         ['@owner']   = xPlayer.identifier,
                         ['@stored'] = 1
                     })
-                    local result = Database(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {
+                    local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {
                         ['@name'] = xPlayer.job.name
                     })
                     local vehicles = {}
@@ -1072,7 +1071,7 @@ ESX.RegisterServerCallback('renzu_jobs:buyvehicle', function(source, cb, model)
                         vehicles = json.decode(result[1].garage)
                         vehicles[plate] = 1
                     end
-                    Database(config.Mysql,'execute','UPDATE renzu_jobs SET garage = @garage WHERE name = @name', {
+                    SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET garage = @garage WHERE name = @name', {
                         ['@name'] = xPlayer.job.name,
                         ['@garage'] = json.encode(vehicles),
                     })
@@ -1167,13 +1166,14 @@ ESX.RegisterServerCallback('renzu_jobs:getPlayerInventory', function(source, cb,
     end
 end)
 
-function Database(plugin,type,query,var)
+function SqlFunc(plugin,type,query,var)
     local query = query
     local type= type
     local var = var
     local plugin = plugin
     if type == 'fetchAll' and plugin == 'mysql-async' then
-        return MySQL.Sync.fetchAll(query, var)
+        local ret = MySQL.Sync.fetchAll(query, var)
+        return ret
     end
     if type == 'execute' and plugin == 'mysql-async' then
         MySQL.Sync.execute(query,var) 
