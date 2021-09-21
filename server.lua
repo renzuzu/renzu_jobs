@@ -36,7 +36,7 @@ CreateThread(function()
                 local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = k})
                 if result[1] and account.money > 0 then
                     local account = account
-                    local jobaccount = json.decode(result[1].accounts)
+                    local jobaccount = json.decode(result[1].accounts) or {}
                     jobaccount['money'] = jobaccount['money'] + account.money -- transfer
                     SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
                         ['@name'] = name,
@@ -55,14 +55,14 @@ end)
 
 function JobMoney(job)
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
-    local ret = json.decode(result[1].accounts)
+    local ret = json.decode(result[1].accounts) or {}
     
     return ret or {money=0,black_money=0}
 end
 
 function removeMoney(amount,job,source,money_type,export)
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
-    local jobaccount = json.decode(result[1].accounts)
+    local jobaccount = json.decode(result[1].accounts) or {}
     jobaccount[money_type] = tonumber(jobaccount[money_type]) - tonumber(amount)
     SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
         ['@name'] = job,
@@ -76,7 +76,7 @@ end
 function addMoney(amount,job,source,money_type,export)
     
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
-    local jobaccount = json.decode(result[1].accounts)
+    local jobaccount = json.decode(result[1].accounts) or {}
     jobaccount[money_type] = tonumber(jobaccount[money_type]) + tonumber(amount)
     SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
         ['@name'] = job,
@@ -102,7 +102,7 @@ end)
 function addItem(job,item,amount,source,type,xPlayer)
     
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
-    local inventory = json.decode(result[1].inventory)
+    local inventory = json.decode(result[1].inventory) or {}
     local slots = config.Jobs[job]['inventory'][type].slots
     local foundslot = false
     if inventory[type] == nil then inventory[type] = {} end
@@ -192,7 +192,7 @@ end
 function removeItem(job,item,amount,source,type,xPlayer,slot)
     
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
-    local inventory = json.decode(result[1].inventory)
+    local inventory = json.decode(result[1].inventory) or {}
     if type == 'Personal' then
         if string.find(item:upper(), "WEAPON_") then
             inventory[type][xPlayer.identifier][slot] = nil
@@ -219,9 +219,8 @@ function removeItem(job,item,amount,source,type,xPlayer,slot)
 end
 
 function GetItems(job,type,xPlayer)
-    
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
-    local inventory = json.decode(result[1].inventory)
+    local inventory = json.decode(result[1].inventory) or {}
     if inventory[type] == nil then inventory[type] = {} end
     if type == 'Personal' then
         if inventory[type][xPlayer.identifier] == nil then inventory[type][xPlayer.identifier] = {} end
@@ -243,7 +242,7 @@ function SaveClothes(clothename,clothe,xPlayer)
         })
     elseif result[1] then -- replace existing or save new
         
-        local wardrobe = json.decode(result[1].wardrobe)
+        local wardrobe = json.decode(result[1].wardrobe) or {}
         
         wardrobe[clothename] = clothe
         SqlFunc(config.Mysql,'execute','UPDATE saveclothes SET wardrobe = @wardrobe WHERE identifier = @identifier', {
