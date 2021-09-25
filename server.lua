@@ -1200,6 +1200,7 @@ RegisterCommand('job', function(source,args)
                 ['@label']   = args[3],
                 ['@whitelisted'] = args[4] or 0
             })
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'Job '..args[2]..' '..args[3]..' has been added')
         elseif args[1] == 'add' and args[2] == nil then
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Job name is not defined! - example usage: /job add police Police 1')
         elseif args[1] == 'add' and args[2] ~= nil and args[3] == nil then
@@ -1211,6 +1212,7 @@ RegisterCommand('job', function(source,args)
                 ['@name'] = string.gsub(args[4], "%s+", ""):lower(),
                 ['@label'] = args[4],
             })
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'Job Grade '..args[3]..' ('..args[4]..') has been added to '..args[2])
         elseif args[1] == 'grade' and args[2] == nil then
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', '(string) Job name is not defined! - example usage: /job grade police 1 Officer')
         elseif args[1] == 'grade' and args[2] ~= nil and args[3] == nil then
@@ -1250,5 +1252,6 @@ RegisterCommand('jobrefresh', function(source,args)
         end
         ESX.Jobs = Jobs
         TriggerEvent('esx:updatejobs',source,Jobs)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'ESX Jobs Has been Refreshed')
     end
 end)
