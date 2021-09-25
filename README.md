@@ -92,11 +92,47 @@ config.inventoryImageUrl = 'https://cfx-nui-'..config.inventory..'/html/img/item
 - Renzu PopUi - https://github.com/renzuzu/renzu_popui
 - Renzu_Notify - https://github.com/renzuzu/renzu_notify
 
+# Commands
+- Job Creator
+```
+- (Add new job)
+/job add police Police 1
+/job grade police 0 Cadet
+```
+- Parameters:
+
+| 1st     | 2nd | 3rd | 4th |
+| --- | --- | --- | --- |
+| add  | jobname (string) | Label (string) | Whitelisted? (int) |
+| grade     |   jobname (string)   | grade (int) | Label (string) |
+
+- Job Refresher (need to edit ESX files)
+```
+/jobrefresh
+```
+- in able to use newly added jobs from jobs creator command, you need to trigger the command to refresh the job list of ESX.Jobs
+
+- files needed to Edit ( es_extended/server/main.lua )
+- add this new code to the bottom of main.lua
+
+```
+RegisterNetEvent('esx:updatejobs')
+AddEventHandler('esx:updatejobs', function(src,jobs)
+	local source = source
+	local xPlayer = ESX.GetPlayerFromId(src)
+	if source == '' or source == nil then source = 0 end
+	if source == 0 and xPlayer.getGroup() == 'superadmin' or source == 0 and xPlayer.getGroup() == 'admin' then
+		ESX.Jobs = jobs
+		print('[^2INFO^7] ESX ^5Legacy^0 Job Refreshed')
+	end
+end)
+```
+
 # TODO
 - Blackmoney Support in Inventory (i forgot silly me) ✔️
 - Simple Dispatch System (discord channel style)
 - Support Black money requirements in shop
-- Ingame Job Adder/Creator (if many will request, i dont think this is needed at all)
+- Ingame Job Adder/Creator ✔️
 - Gangwar Feature
 - Raid Feature
 - Odd Job / Task for Each Job/gangs
