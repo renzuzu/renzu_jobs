@@ -128,6 +128,86 @@ AddEventHandler('esx:updatejobs', function(src,jobs)
 end)
 ```
 
+# Money Wash
+- Preconfigured Money wash using IPL
+- Default 4 available Washing slot
+- can be owned by job
+- Tax
+
+# Interaction (WIP)
+- this need renzu_contextmenu
+- Configurable Interaction
+- Event Firing Logic
+- command /interaction (or bind it to F6 if you like)
+[details="Sample How to Setup Interaction"]
+# Job Table in config ( example is in police default config )
+
+|index|grade|type|
+| --- | --- | --- |
+|table identifier of this interaction eg 1 for cuff | default job grade to have this interaction| interaction type eg. citizen_interaction |
+```
+
+['interaction'] = {
+
+            ['Citizen Interaction'] = {
+
+                [1] = {index = 2, grade = 0, type = 'citizen_interaction'},
+
+            },
+
+            ['Vehicle Interaction'] = {
+
+                [1] = {index = 2, grade = 0, type = 'vehicle_interaction'},
+
+            },
+ },
+```
+|table identifier | label | name |
+| --- | --- | --- |
+| int number ex. [1] for cuff | Menu Name | Event name |
+```
+# this is the config
+config.citizen_interaction = {
+    [1] = {label = 'Cuff', name = 'cuff'},
+    [2] = {label = 'Check ID', name = 'checkid'},
+    [3] = {label = 'Bill', name = 'bill'},
+    [4] = {label = 'Search Citizen', name = 'searchplayer'},
+    [5] = {label = 'Escort', name = 'drag1'},
+    [6] = {label = 'Put in Vehicle', name = 'putinvehicle'},
+    [7] = {label = 'Jail', name = 'jail'},
+    [8] = {label = 'Gunshot Residue', name = 'gsr'},
+    [9] = {label = 'Drug Swab Test', name = 'swabtest'},
+    [10] = {label = 'Breathalizer', name = 'breathalizer'},
+    [11] = {label = 'Manage License', name = 'managelicense'},
+    [12] = {label = 'Check BP', name = 'checkbp1'},
+    [13] = {label = 'Revive Citizen', name = 'revive1'},
+    [14] = {label = 'Send to Emergency Room', name = 'sendtoemergencyroom'},
+    [15] = {label = 'Revive Patient in Emergency Room', name = 'revive2'},
+    [16] = {label = 'Heal Small Wounds', name = 'healsmall1'},
+    [17] = {label = 'Drag Dead Body', name = 'drag2'},
+    [18] = {label = 'Carry', name = 'carry1'},
+}
+config.vehicle_interaction = {
+    [1] = {label = 'Drag out in Vehicle', name='dragout1'},
+    [2] = {label = 'Lockpick', name='lockpick'},
+    [3] = {label = 'Impound', name='impound'},
+    [4] = {label = 'Use Car Jack', name='liftvehicle'},
+    [5] = {label = 'Engine Repair', name='enginerepair1'},
+    [6] = {label = 'Body Repair', name='bodyrepair1'},
+    [7] = {label = 'Flatbed', name='flatbed1'},
+    [8] = {label = 'Clean Vehicle', name='cleanvehicle1'},
+    [9] = {label = 'Vehicle Chop', name='vehiclechop1'},
+    [10] = {label = 'Put Body in Vehicle', name='putbodyinvehicle1'},
+}
+```
+> you can use renzu_jobs\plugins
+> to install custom lua files to use in interaction events (sample is provided)
+
+> name for client files must start with cl_ and sv_ for server
+[/details]
+
+
+
 # TODO
 - Blackmoney Support in Inventory (i forgot silly me) ✔️
 - Simple Dispatch System (discord channel style)
