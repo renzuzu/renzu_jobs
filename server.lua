@@ -477,7 +477,7 @@ end)
 function Cancarry(xPlayer,item,amount)
     if config.esx == '1.1' and xPlayer.getInventoryItem(item).limit >= (xPlayer.getInventoryItem(item).count + tonumber(amount)) then
         return true
-    elseif config.esx == '1.2' and xPlayer.canCarryItem(item,tonumber(amount))
+    elseif config.esx == '1.2' and xPlayer.canCarryItem(item,tonumber(amount)) then
         return true
     end
     return false
