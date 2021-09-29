@@ -282,17 +282,15 @@ function addMoneyOffline(identifier,amount)
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users WHERE identifier = @identifier', {['@identifier'] = identifier})
     if result[1] then
         if config.esx == '1.1' then
-            local bank = result[1].bank
-            local money = result[1].money
-            SqlFunc(config.Mysql,'execute','UPDATE users SET money = @money, bank = @bank WHERE identifier = @identifier',
+            local bank = tonumber(result[1].bank) + tonumber(amount)
+            SqlFunc(config.Mysql,'execute','UPDATE users SET bank = @bank WHERE identifier = @identifier',
             {
                 ['@bank'] = bank,
-                ['@money'] = money,
                 ['@identifier'] = identifier
             })
         else
             local res = json.decode(result[1].accounts)
-            res['bank'] = res['bank'] + amount
+            res['bank'] = res['bank'] + tonumber(amount)
             SqlFunc(config.Mysql,'execute','UPDATE users SET accounts = @accounts WHERE identifier = @identifier',
             {
                 ['@accounts'] = json.encode(res),
