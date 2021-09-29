@@ -1,6 +1,7 @@
 config = {}
 -- MAIN CONFIG
-config.Mysql = 'mysql-async' -- "ghmattisql", "mysql-async"
+config.Mysql = 'ghmattisql' -- "ghmattisql", "mysql-async"
+config.esx = '1.2' -- 1.1 or 1.2 , 1.2 are v1final and esx legacy is compatible
 config.css = 'new' -- new or old -- new = 4 column, old 2 column
 config.logo = 'https://forum.cfx.re/uploads/default/original/4X/b/1/9/b196908c7e5dfcd60aa9dca0020119fa55e184cb.png' -- url of logo
 
@@ -33,6 +34,38 @@ config.usePopui = false -- https://github.com/renzuzu/renzu_popui -- if false, w
 -- WEBHOOK
 config.discordwebhook = true -- enable disable webhook logs to discord
 
+config.citizen_interaction = {
+    [1] = {label = 'Cuff', name = 'cuff'},
+    [2] = {label = 'Check ID', name = 'checkid'},
+    [3] = {label = 'Bill', name = 'bill'},
+    [4] = {label = 'Search Citizen', name = 'searchplayer'},
+    [5] = {label = 'Escort', name = 'drag1'},
+    [6] = {label = 'Put in Vehicle', name = 'putinvehicle'},
+    [7] = {label = 'Jail', name = 'jail'},
+    [8] = {label = 'Gunshot Residue', name = 'gsr'},
+    [9] = {label = 'Drug Swab Test', name = 'swabtest'},
+    [10] = {label = 'Breathalizer', name = 'breathalizer'},
+    [11] = {label = 'Manage License', name = 'managelicense'},
+    [12] = {label = 'Check BP', name = 'checkbp1'},
+    [13] = {label = 'Revive Citizen', name = 'revive1'},
+    [14] = {label = 'Send to Emergency Room', name = 'sendtoemergencyroom'},
+    [15] = {label = 'Revive Patient in Emergency Room', name = 'revive2'},
+    [16] = {label = 'Heal Small Wounds', name = 'healsmall1'},
+    [17] = {label = 'Drag Dead Body', name = 'drag2'},
+    [18] = {label = 'Carry', name = 'carry1'},
+}
+config.vehicle_interaction = {
+    [1] = {label = 'Drag out in Vehicle', name='dragout1'},
+    [2] = {label = 'Lockpick', name='lockpick'},
+    [3] = {label = 'Impound', name='impound'},
+    [4] = {label = 'Use Car Jack', name='liftvehicle'},
+    [5] = {label = 'Engine Repair', name='enginerepair1'},
+    [6] = {label = 'Body Repair', name='bodyrepair1'},
+    [7] = {label = 'Flatbed', name='flatbed1'},
+    [8] = {label = 'Clean Vehicle', name='cleanvehicle1'},
+    [9] = {label = 'Vehicle Chop', name='vehiclechop1'},
+    [10] = {label = 'Put Body in Vehicle', name='putbodyinvehicle1'},
+}
 -- JOB Config
 -- SAMPLE CONFIG
 -- All Coordinates and permission for grades must be change for your own liking
@@ -165,6 +198,14 @@ config.Jobs = {
             label = 'On/Off Duty',
             event = 'renzu_jobs:duty',
         },
+        ['interaction'] = {
+            ['Citizen Interaction'] = {
+                [1] = {index = 2, grade = 0, type = 'citizen_interaction'},
+            },
+            ['Vehicle Interaction'] = {
+                [1] = {index = 2, grade = 0, type = 'vehicle_interaction'},
+            },
+        },
         ['grade'] = { -- grade access , pay attention to the perms, grade int is the index number of array
             [0] = { -- example grade = 0, ex. cadet? lowest rank, grade can be found in job_grades database table
                 access = {fire = false, withdraw = false, deposit = false, gradechange = false},
@@ -196,7 +237,7 @@ config.Jobs = {
             [9] = {
                 access = {fire = true, withdraw = true, deposit = true, gradechange = true, givebonus = true, salarychange = true},
             },
-        }
+        },
     },
 
     -- other jobs sample

@@ -508,10 +508,10 @@ end
 local markers = {}
 
 function ShowFloatingHelpNotification(msg, coords)
-    AddTextEntry('FloatingHelpNotification', msg)
-    SetFloatingHelpTextWorldPosition(1, coords)
+    AddTextEntry('FloatingHelpNotificationjobs', msg)
+    SetFloatingHelpTextWorldPosition(1, coords.x,coords.y,coords.z)
     SetFloatingHelpTextStyle(1, 1, 2, -1, 3, 0)
-    BeginTextCommandDisplayHelp('FloatingHelpNotification')
+    BeginTextCommandDisplayHelp('FloatingHelpNotificationjobs')
     EndTextCommandDisplayHelp(2, false, false, -1)
 end
 
@@ -522,11 +522,11 @@ function DrawMarkerInput(vec,msg,event,server,name,job)
             cancel = false
             local ped = PlayerPedId()
             local coord = GetEntityCoords(ped)
-            while #(vec - coord) <= 7 and not cancel and not setjob do
+            while #(vec - coord) <= 3 and not cancel and not setjob do
                 Citizen.Wait(5)
                 coord = GetEntityCoords(ped)
                 if config.showmarker then
-                    DrawMarker(22, vec ,0,0,0,0,0,1.0,1.0,1.0,1.0,255, 255, 220,200,0,0,0,1)
+                    DrawMarker(22, vec.x,vec.y,vec.z ,0,0,0,0,0,1.0,1.0,1.0,1.0,255, 255, 220,200,0,0,0,1)
                 end
                 if not config.usePopui and #(vec - coord) < 1.5 then
                     ShowFloatingHelpNotification("Press [E] "..msg,vec)
@@ -560,7 +560,7 @@ Citizen.CreateThread(function()
             if shop['shop'] then
                 for k,v in ipairs(shop['shop']) do
                     local k = tonumber(k)
-                    if v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 7 or not v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 7 and job == k2 then
+                    if v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 3 or not v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 3 and job == k2 then
                         shopindex = k
                         DrawMarkerInput(v.coord,v.label,v.event,false,'shop',k2)
                         if config.usePopui then
@@ -589,7 +589,7 @@ Citizen.CreateThread(function()
                 end
             end
             local v = shop
-            if v['duty'] and #(GetEntityCoords(PlayerPedId()) - v['duty'].coord) < 7 and job == k2 or v['duty'] and #(GetEntityCoords(PlayerPedId()) - v['duty'].coord) < 7 and job == v['duty'].offdutyname then
+            if v['duty'] and #(GetEntityCoords(PlayerPedId()) - v['duty'].coord) < 3 and job == k2 or v['duty'] and #(GetEntityCoords(PlayerPedId()) - v['duty'].coord) < 3 and job == v['duty'].offdutyname then
                 DrawMarkerInput(v['duty'].coord,v['duty'].label,v['duty'].event,false,'duty',k2)
                 if config.usePopui then
                     local dist = #(coord - v['duty'].coord)
@@ -633,14 +633,14 @@ Citizen.CreateThread(function()
         if jobtable ~= nil then
             for k,v in pairs(jobtable) do
                 --print(k ~= 'max_salary' , not invehicle , jobtable[k] ~= nil , jobtable[k].coord ~= nil , jobtable[k].coord , coord , grade , jobtable[k].grade)
-                if k ~= 'max_salary' and not invehicle and jobtable[k] ~= nil and jobtable[k].coord ~= nil and #(jobtable[k].coord - coord) < 7 and grade >= jobtable[k].grade then
+                if k ~= 'max_salary' and not invehicle and jobtable[k] ~= nil and jobtable[k].coord ~= nil and #(jobtable[k].coord - coord) < 3 and grade >= jobtable[k].grade then
                     DrawMarkerInput(jobtable[k].coord,jobtable[k].label,jobtable[k].event,false,k)
-                elseif k == 'garage' and invehicle and jobtable[k] ~= nil and jobtable[k].spawn ~= nil and #(vector3(jobtable[k].spawn.x,jobtable[k].spawn.y,jobtable[k].spawn.z) - coord) < 7 and grade >= jobtable[k].grade then
+                elseif k == 'garage' and invehicle and jobtable[k] ~= nil and jobtable[k].spawn ~= nil and #(vector3(jobtable[k].spawn.x,jobtable[k].spawn.y,jobtable[k].spawn.z) - coord) < 3 and grade >= jobtable[k].grade then
                     DrawMarkerInput(vector3(jobtable[k].spawn.x,jobtable[k].spawn.y,jobtable[k].spawn.z),jobtable[k].label,jobtable[k].event,false,k)
                 end
             end
             for k,v in pairs(jobtable['inventory']) do
-                if k ~= 'max_salary' and v ~= nil and v.coord ~= nil and #(v.coord - coord) < 7 and grade >= v.grade then
+                if k ~= 'max_salary' and v ~= nil and v.coord ~= nil and #(v.coord - coord) < 3 and grade >= v.grade then
                     DrawMarkerInput(v.coord,v.label,v.event,false,k)
                 end
             end
@@ -1154,3 +1154,36 @@ function GetVehicleClassnamemodel(vehicle)
     local class = tostring(GetVehicleClassFromName(vehicle))
     return classlist(class)
 end
+
+function OpenInteraction()
+    local multimenu = {}
+    local firstmenu = {}
+    local openmenu = false
+    for k,v in pairs(config.Jobs[PlayerData.job.name]['interaction']) do
+        for index,t in pairs(v) do
+            if multimenu[k] == nil then multimenu[k] = {} end
+            local interaction = config[t.type][t.index].label
+            print(k,interaction,config[t.type][t.index].name)
+            multimenu[k][interaction] = {
+                ['title'] = interaction,
+                ['fa'] = '<i class="fad fa-question-square"></i>',
+                ['type'] = 'event', -- event / export
+                ['content'] = config[t.type][t.index].name,
+                ['variables'] = {server = false, send_entity = false, onclickcloseui = true, custom_arg = {}, arg_unpack = true},
+            }
+            openmenu = true
+        end
+    end
+    if openmenu then
+        TriggerEvent('renzu_contextmenu:close')
+		Wait(200)
+        TriggerEvent('renzu_contextmenu:insertmulti',multimenu,"Interaction",false,"<i class='fad fa-eye'></i> Interaction")
+        TriggerEvent('renzu_contextmenu:show')
+    else
+        TriggerEvent('renzu_notify:Notify', 'error','Customs', 'Inventory is Empty')
+    end
+end
+
+RegisterCommand('interaction', function(source, args, rawCommand)
+    OpenInteraction()
+end)

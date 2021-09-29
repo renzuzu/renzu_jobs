@@ -17,13 +17,15 @@ client_scripts {
 	"weaponconfig.lua",
 	"config.lua",
 	"weapons.lua",
-	"client.lua"
+	"client.lua",
+	'plugins/**/cl_*.lua',
 }
 
 server_scripts {
 	'@mysql-async/lib/MySQL.lua',
 	"config.lua",
-	"server.lua"
+	"server.lua",
+	'plugins/**/sv_*.lua',
 }
 
 files {

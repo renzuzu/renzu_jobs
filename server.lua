@@ -278,13 +278,24 @@ end
 function addMoneyOffline(identifier,amount)
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users WHERE identifier = @identifier', {['@identifier'] = identifier})
     if result[1] then
-        local res = json.decode(result[1].accounts)
-        res['bank'] = res['bank'] + amount
-        SqlFunc(config.Mysql,'execute','UPDATE users SET accounts = @accounts WHERE identifier = @identifier',
-        {
-            ['@accounts'] = json.encode(res),
-            ['@identifier'] = identifier
-        })
+        if config.esx == '1.1' then
+            local bank = result[1].bank
+            local money = result[1].money
+            SqlFunc(config.Mysql,'execute','UPDATE users SET money = @money, bank = @bank WHERE identifier = @identifier',
+            {
+                ['@bank'] = bank,
+                ['@money'] = money,
+                ['@identifier'] = identifier
+            })
+        else
+            local res = json.decode(result[1].accounts)
+            res['bank'] = res['bank'] + amount
+            SqlFunc(config.Mysql,'execute','UPDATE users SET accounts = @accounts WHERE identifier = @identifier',
+            {
+                ['@accounts'] = json.encode(res),
+                ['@identifier'] = identifier
+            })
+        end
     end
 end
 
@@ -463,6 +474,15 @@ ESX.RegisterServerCallback('renzu_jobs:changesalary', function (source, cb, grad
     end
 end)
 
+function Cancarry(xPlayer,item,amount)
+    if config.esx == '1.1' and xPlayer.getInventoryItem(item).limit >= (xPlayer.getInventoryItem(item).count + tonumber(amount)) then
+        return true
+    elseif config.esx == '1.2' and xPlayer.canCarryItem(item,tonumber(amount))
+        return true
+    end
+    return false
+end
+
 ESX.RegisterServerCallback('renzu_jobs:buyitem',function(source, cb, item, amount, job, shopindex)
     local source = source
     local xPlayer = ESX.GetPlayerFromId(source)
@@ -479,8 +499,7 @@ ESX.RegisterServerCallback('renzu_jobs:buyitem',function(source, cb, item, amoun
             end
         end
         value = value * amount
-        
-        if found and tonumber(amount) > 0 and xPlayer.getMoney() >= tonumber(value) then
+        if found and tonumber(amount) > 0 and xPlayer.getMoney() >= tonumber(value) and Cancarry(xPlayer,item,amount) then
             addMoney(tonumber(value),job,source,'money')
             xPlayer.removeMoney(tonumber(value))
             local label = nil
@@ -497,6 +516,9 @@ ESX.RegisterServerCallback('renzu_jobs:buyitem',function(source, cb, item, amoun
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['shop'][shopindex].webhook,16711680,config.Jobs[xPlayer.job.name]['shop'][shopindex].label,DiscordMessage(xPlayer,'Buy item',label..' '..amount,' '))
             end
             cb(true)
+        elseif not Cancarry(xPlayer,item,amount) and found then
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have inventory space')
+            cb(false)
         elseif found then
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have enough money')
             cb(false)
@@ -704,8 +726,13 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
                     end
                 end
             elseif item ~= 'black_money' or config.black_money_item then
-                label = ESX.GetItemLabel(item)
-                xPlayer.addInventoryItem(item, tonumber(amount))
+                if Cancarry(xPlayer,item,amount) then
+                    label = ESX.GetItemLabel(item)
+                    xPlayer.addInventoryItem(item, tonumber(amount))
+                else
+                    TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough inventory space')
+                    cb(false)
+                end
             elseif item == 'black_money' and not config.black_money_item then
                 label = 'Black Money'
                 xPlayer.addAccountMoney('black_money',tonumber(amount))
@@ -770,6 +797,10 @@ ESX.RegisterServerCallback('renzu_jobs:craftitem', function(source, cb, item, am
                 if hasitem.count ~= nil and hasitem.count < require then
                     notenoughcabron = true
                 end
+            end
+            if not Cancarry(xPlayer,item,tonumber(amount) then
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough inventory space')
+                cb(false)
             end
             if notenoughcabron then
                 TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough requirement')
