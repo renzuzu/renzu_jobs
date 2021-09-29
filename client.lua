@@ -515,14 +515,16 @@ function ShowFloatingHelpNotification(msg, coords)
     EndTextCommandDisplayHelp(2, false, false, -1)
 end
 
-function DrawMarkerInput(vec,msg,event,server,name,job)
+function DrawMarkerInput(vec,msg,event,server,name,job,d)
+    local d = d
+    if d == nil then d = 3 end
     if markers[name] == nil and not config.usePopui or markers[name] == nil and config.showmarker and config.usePopui then
         markers[name] = true
         CreateThread(function()
             cancel = false
             local ped = PlayerPedId()
             local coord = GetEntityCoords(ped)
-            while #(vec - coord) <= 3 and not cancel and not setjob do
+            while #(vec - coord) <= d and not cancel and not setjob do
                 Citizen.Wait(5)
                 coord = GetEntityCoords(ped)
                 if config.showmarker then
@@ -537,7 +539,7 @@ function DrawMarkerInput(vec,msg,event,server,name,job)
                             TriggerServerEvent(event,name,job)
                         end
                         Wait(100)
-                        while #(vec - coord) < 3 and not cancel and not setjob do coord = GetEntityCoords(ped) Wait(100) end
+                        while #(vec - coord) < d and not cancel and not setjob do coord = GetEntityCoords(ped) Wait(100) end
                         markers[name] = nil
                         break
                     end
@@ -550,6 +552,7 @@ function DrawMarkerInput(vec,msg,event,server,name,job)
 end
 
 -- PUBLIC SHOPS && DUTY
+local currentwash = nil
 Citizen.CreateThread(function()
     Wait(2000)
     while PlayerData == nil do Wait(10) end
@@ -615,7 +618,140 @@ Citizen.CreateThread(function()
                 end
             end
         end
+        
+        for k,v in pairs(config.moneywashcoord) do
+            local ent = config.moneywashcoord['entrance']
+            local ex = config.moneywashcoord['exit']
+            if k == 'entrance' and #(GetEntityCoords(PlayerPedId()) - ent) < 1.2 then
+                DrawMarkerInput(ent,'to Enter','renzu_jobs:washroom',false,'exit',k,1.2)
+                if config.usePopui then
+                    local dist = #(coord - ent)
+                    if dist < 1.2 then
+                        local table = {
+                            ['key'] = 'E', -- key
+                            ['event'] = 'renzu_jobs:washroom',
+                            ['title'] = 'Press [E] to Enter',
+                            ['server_event'] = false, -- server event or client
+                            ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
+                            ['fa'] = '<i class="fal fa-medal"></i>',
+                            ['custom_arg'] = {'exit'}, -- example: {1,2,3,4}
+                        }
+                        TriggerEvent('renzu_popui:drawtextuiwithinput',table)
+                        cancel = false
+                        while dist < 3 and not cancel do
+                            coord = GetEntityCoords(PlayerPedId())
+                            dist = #(coord - v['duty'].coord)
+                            Wait(500)
+                        end
+                        TriggerEvent('renzu_popui:closeui')
+                    end
+                end
+            end
+            if k == 'exit' and #(GetEntityCoords(PlayerPedId()) - ex) < 1.2 then
+                DrawMarkerInput(ex,'to Enter','renzu_jobs:washroom',false,'entrance',k,1.2)
+                if config.usePopui then
+                    local dist = #(coord - ex)
+                    if dist < 1.2 then
+                        local table = {
+                            ['key'] = 'E', -- key
+                            ['event'] = 'renzu_jobs:washroom',
+                            ['title'] = 'Press [E] to Enter',
+                            ['server_event'] = false, -- server event or client
+                            ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
+                            ['fa'] = '<i class="fal fa-medal"></i>',
+                            ['custom_arg'] = {'entrance'}, -- example: {1,2,3,4}
+                        }
+                        TriggerEvent('renzu_popui:drawtextuiwithinput',table)
+                        cancel = false
+                        while dist < 3 and not cancel do
+                            coord = GetEntityCoords(PlayerPedId())
+                            dist = #(coord - v['duty'].coord)
+                            Wait(500)
+                        end
+                        TriggerEvent('renzu_popui:closeui')
+                    end
+                end
+            end
+        end
+
+        for k,v in pairs(config.MoneyWash) do
+            if#(GetEntityCoords(PlayerPedId()) - vector3(v.coord.x,v.coord.y,v.coord.z)) < 1.2 and not v.inuse then
+                currentwash = k
+                DrawMarkerInput(vector3(v.coord.x,v.coord.y,v.coord.z),'Wash Money','renzu_jobs:moneywash',false,'wash',k,1.2)
+                if config.usePopui then
+                    local dist = #(coord - vector3(v.coord.x,v.coord.y,v.coord.z))
+                    if dist < 1.2 then
+                        local table = {
+                            ['key'] = 'E', -- key
+                            ['event'] = 'renzu_jobs:moneywash',
+                            ['title'] = 'Press [E] Wash Money',
+                            ['server_event'] = false, -- server event or client
+                            ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
+                            ['fa'] = '<i class="fal fa-medal"></i>',
+                            ['custom_arg'] = {'wash',k}, -- example: {1,2,3,4}
+                        }
+                        TriggerEvent('renzu_popui:drawtextuiwithinput',table)
+                        cancel = false
+                        while dist < 3 and not cancel do
+                            coord = GetEntityCoords(PlayerPedId())
+                            dist = #(coord - v['duty'].coord)
+                            Wait(500)
+                        end
+                        TriggerEvent('renzu_popui:closeui')
+                    end
+                end
+            end
+        end
         Wait(1000)
+    end
+end)
+
+RegisterNetEvent('renzu_jobs:washroom')
+AddEventHandler('renzu_jobs:washroom', function(string)
+	DoScreenFadeOut(500)
+    print(string,'gago')
+    Wait(1000)
+    SetEntityCoords(PlayerPedId(),config.moneywashcoord[string])
+    Wait(500)
+    while not HasCollisionLoadedAroundEntity(PlayerPedId()) do Wait(0) end
+    DoScreenFadeIn(500)
+end)
+
+RegisterNetEvent('renzu_jobs:moneywash')
+AddEventHandler('renzu_jobs:moneywash', function()
+	ESX.TriggerServerCallback("renzu_jobs:getBlackMoney",function(blackmoney)
+        SendNUIMessage({
+            type = 'Wash',
+            content = {wash = blackmoney}
+        })
+        SetNuiFocus(true,true)
+    end)
+end)
+
+RegisterNUICallback('moneywash', function(data, cb)
+    ESX.TriggerServerCallback("renzu_jobs:washmoney",function(a)
+        if a then
+            TriggerEvent('renzu_notify:Notify', 'info','Customs', 'Money is being Washed')
+        else
+            TriggerEvent('renzu_notify:Notify', 'error','Customs', 'Machine already in use')
+        end
+        SetNuiFocus(false,false)
+        cb(a)
+    end,data.amount,currentwash)
+end)
+
+RegisterNetEvent('renzu_jobs:washuse')
+AddEventHandler('renzu_jobs:washuse', function(id, bool)
+    config.MoneyWash[id].inuse = bool
+    if bool then
+        Citizen.CreateThread(function()
+            local count = 0
+            while count < 60 do
+                count = count + 1
+                print(count)
+                Wait(1000)
+            end
+        end)
     end
 end)
 

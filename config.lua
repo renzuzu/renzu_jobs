@@ -66,6 +66,19 @@ config.vehicle_interaction = {
     [9] = {label = 'Vehicle Chop', name='vehiclechop1'},
     [10] = {label = 'Put Body in Vehicle', name='putbodyinvehicle1'},
 }
+
+config.moneywashcoord = {
+    entrance = vector3(259.70086669922,-782.91326904297,30.513477325439), 
+    exit = vector3(1137.7464599609,-3198.9235839844,-39.665752410889)
+}
+config.MoneyWashOwner = 'police' -- job money income (tax) will go to this job, replace this to any job
+config.MoneyWashTax = 0.05 -- 0.05 = 5% TAX, 0.1 = 10% , 0.5 50%
+config.MoneyWash = {
+    [1] = {coord = vector4(1122.3912353516,-3194.7260742188,-40.400051116943,354.4182434082), inuse = false},
+    [2] = {coord = vector4(1123.9632568359,-3194.3732910156,-40.397888183594,15.791656494141), inuse = false},
+    [3] = {coord = vector4(1125.5310058594,-3194.3220214844,-40.397579193115,0.35743966698647), inuse = false},
+    [4] = {coord = vector4(1126.9295654297,-3194.3625488281,-40.397869110107,354.97473144531), inuse = false},
+}
 -- JOB Config
 -- SAMPLE CONFIG
 -- All Coordinates and permission for grades must be change for your own liking

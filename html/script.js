@@ -507,6 +507,48 @@
             </div>`
             $('#modalfunc').append(give)
           }
+
+          if (e.id == 'wash') {
+            var give = `<div id="`+e.id+`" class="modal" style="display: block;">
+            <div class="modal-content" style="width:40%;">
+              <div class="modal-header">
+                <span class="close" onclick="CloseModal()">×</span>
+                <h2 style="text-align:center;">Wash Money <span id="playername"></span></h2>
+              </div>
+              <div class="modal-body">
+                <form id="manage" method="post">
+                <label for="url" style="
+                display: block;
+                background: #011a40;
+                margin-right: 5px;
+                height: 40px;
+                /* padding-top: 11px; */
+                /* padding-bottom: 10px; */
+                margin-bottom: 10px;
+                /* text-align: center; */
+                line-height: 2.5;
+                ">Total Blackmoney: <span id="dirtymoney" style="
+    border: none;
+    border-color: unset;
+    border-radius: 0;
+    background: transparent;
+    color: #ffffff;
+    padding-left: 5px;
+">1231313</span></label>
+                <label for="url" style="display: inline;
+                background: #011a40;
+                margin-right: 5px;
+                height: 40px;
+                padding-top: 11px;
+                padding-bottom: 10px;">Amount:</label>
+                  <input type="text" id="amount" name="amount">
+                  <button style="position:unset !important;" id="wash" onclick="event.preventDefault();washmoney('`+id+`')">Confirm</button>
+                </form>
+              </div>
+            </div>
+            </div>`
+            $('#modalfunc').append(give)
+          }
           
           if (e.id == 'modify_weapon') {
             var give = `<div id="`+e.id+`" class="modal" style="display: block;">
@@ -1113,6 +1155,22 @@
           });
         }
 
+        function washmoney() {
+          var v = $( "form" ).serializeArray()
+          var amount = 0
+          for (const i in v) {
+            if (v[i].name == 'amount') {
+              amount = v[i].value
+            }
+          }
+          $.post("https://renzu_jobs/moneywash",JSON.stringify({amount:amount}),function(cb) {
+            if (cb) {
+              Timer()
+              $('#modalfunc').html('')
+            }
+          });
+        }
+
         function craft(item,type) {
           var v = $( "form" ).serializeArray()
           //
@@ -1459,6 +1517,13 @@
               $("#switch_off").attr('class', off_switch);
             }
           }
+          if (event.type == 'Wash') {
+            const wash = event.content.wash
+            event.type = undefined
+            $("#logo").attr("src", event.content.logo);
+            OpenModalFunction({id :'wash'},event.content.wash)
+            document.getElementById("dirtymoney").innerHTML = event.content.wash;
+          }
           if (event.type == 'Garage') {
             const garage = event.content.garagedata
             event.type = undefined
@@ -1574,3 +1639,130 @@
       function checkURL(url) {
         return(url.match(/\.(jpeg|jpg|gif|png)$/) != null);
       }
+
+
+function Timer() {
+  var string = `<div id="revese-timer" data-minute="1"></div>`
+  $('#timerdiv').append(string)
+  if ($('#revese-timer').length) {
+
+    const FULL_DASH_ARRAY = 283;
+    const WARNING_THRESHOLD = 20;
+    const ALERT_THRESHOLD = 15;
+
+    const COLOR_CODES = {
+      info: {
+        color: "green"
+      },
+      warning: {
+        color: "orange",
+        threshold: WARNING_THRESHOLD
+      },
+      alert: {
+        color: "red",
+        threshold: ALERT_THRESHOLD
+      }
+    };
+
+
+    var Minute = $('#revese-timer').data('minute');
+    var Seconds = Math.round(60 * Minute);
+    const TIME_LIMIT = Seconds;
+    let timePassed = 0;
+    let timeLeft = TIME_LIMIT;
+    let timerInterval = null;
+    let remainingPathColor = COLOR_CODES.info.color;
+
+    document.getElementById("revese-timer").innerHTML = `
+    <div class="base-timer">
+      <svg class="base-timer__svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <g class="base-timer__circle">
+          <circle class="base-timer__path-elapsed" cx="50" cy="50" r="45"></circle>
+          <path
+            id="base-timer-path-remaining"
+            stroke-dasharray="283"
+            class="base-timer__path-remaining ${remainingPathColor}"
+            d="
+              M 50, 50
+              m -45, 0
+              a 45,45 0 1,0 90,0
+              a 45,45 0 1,0 -90,0
+            "
+          ></path>
+        </g>
+      </svg>
+      <span id="base-timer-label" class="base-timer__label">${formatTime(
+        timeLeft
+      )}</span>
+    </div>
+    `;
+
+    startTimer();
+
+    function onTimesUp() {
+      clearInterval(timerInterval);
+      $('#timerdiv').html('')
+    }
+
+    function startTimer() {
+      timerInterval = setInterval(() => {
+        timePassed = timePassed += 1;
+        timeLeft = TIME_LIMIT - timePassed;
+        document.getElementById("base-timer-label").innerHTML = formatTime(
+          timeLeft
+        );
+        setCircleDasharray();
+        setRemainingPathColor(timeLeft);
+
+        if (timeLeft === 0) {
+          onTimesUp();
+        }
+      }, 1000);
+    }
+
+    function formatTime(time) {
+      const minutes = Math.floor(time / 60);
+      let seconds = time % 60;
+
+      if (seconds < 10) {
+        seconds = `0${seconds}`;
+      }
+
+      return `${minutes}:${seconds}`;
+    }
+
+    function setRemainingPathColor(timeLeft) {
+      const { alert, warning, info } = COLOR_CODES;
+      if (timeLeft <= alert.threshold) {
+        document
+          .getElementById("base-timer-path-remaining")
+          .classList.remove(warning.color);
+        document
+          .getElementById("base-timer-path-remaining")
+          .classList.add(alert.color);
+      } else if (timeLeft <= warning.threshold) {
+        document
+          .getElementById("base-timer-path-remaining")
+          .classList.remove(info.color);
+        document
+          .getElementById("base-timer-path-remaining")
+          .classList.add(warning.color);
+      }
+    }
+
+    function calculateTimeFraction() {
+      const rawTimeFraction = timeLeft / TIME_LIMIT;
+      return rawTimeFraction - (1 / TIME_LIMIT) * (1 - rawTimeFraction);
+    }
+
+    function setCircleDasharray() {
+      const circleDasharray = `${(
+        calculateTimeFraction() * FULL_DASH_ARRAY
+      ).toFixed(0)} 283`;
+      document
+        .getElementById("base-timer-path-remaining")
+        .setAttribute("stroke-dasharray", circleDasharray);
+    }
+
+  }
+}

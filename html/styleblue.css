@@ -1098,3 +1098,69 @@ a {
   color: white;
   box-shadow: inset 0 0 10px #555;
 }
+
+
+
+
+
+
+
+
+
+/*----------------------*/
+.base-timer {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: auto;
+}
+
+.base-timer__svg {
+    transform: scaleX(-1);
+}
+
+.base-timer__circle {
+    fill: none;
+    stroke: none;
+}
+
+.base-timer__path-elapsed {
+    stroke-width: 6px;
+    stroke: #efefef;
+}
+
+.base-timer__path-remaining {
+    stroke-width: 8px;
+    stroke-linecap: round;
+    transform: rotate(90deg);
+    transform-origin: center;
+    transition: 1s linear all;
+    fill-rule: nonzero;
+    stroke: currentColor;
+}
+
+.base-timer__path-remaining.green {
+  color: #4383c5;
+}
+
+.base-timer__path-remaining.orange {
+    color: orange;
+}
+
+.base-timer__path-remaining.red {
+    color: red;
+}
+
+.base-timer__label {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #ffffff85;
+}

@@ -1127,6 +1127,55 @@ ESX.RegisterServerCallback('renzu_jobs:buyvehicle', function(source, cb, model)
     
 end)
 
+function Round(num)
+	return math.floor(num+0.5)
+end
+
+ESX.RegisterServerCallback('renzu_jobs:washmoney', function(source, cb, amount, id)
+    local source = source
+	local xPlayer    = ESX.GetPlayerFromId(source)
+    local id = id
+    local coord = GetEntityCoords(GetPlayerPed(source))
+    if tonumber(amount) < 0 then
+        DropPlayer(source,'is this bug?')
+        return
+    end
+    if not config.MoneyWash[id].inuse then
+        Citizen.CreateThread(function()
+            local src = source
+            coord = coord
+            config.MoneyWash[id].inuse = true
+            TriggerClientEvent('renzu_jobs:washuse',-1, id,config.MoneyWash[id].inuse)
+            xPlayer.removeAccountMoney('black_money',tonumber(amount))
+            Wait(60000)
+            config.MoneyWash[id].inuse = false
+            if #(GetEntityCoords(GetPlayerPed(src)) - coord) < 50 then
+                TriggerClientEvent('renzu_jobs:washuse',-1, id,config.MoneyWash[id].inuse)
+                local money = Round(tonumber(amount) * (1-config.MoneyWashTax))
+                local tax = Round(tonumber(amount) * config.MoneyWashTax)
+                xPlayer.addMoney(money)
+                addMoney(tonumber(tax),config.MoneyWashOwner,src,'money')
+                print('sending washed money',money)
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'Money is Successfuly Washed')
+            else
+                local money = Round(tonumber(amount) * (1-config.MoneyWashTax))
+                addMoney(tonumber(money),config.MoneyWashOwner,src,'money')
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Money is Successfuly Washed and someone took it')
+            end
+        end)
+        Wait(1000)
+        cb(true)
+    else
+        cb(false)
+    end
+end)
+
+ESX.RegisterServerCallback('renzu_jobs:getBlackMoney', function(source, cb)
+	local xPlayer    = ESX.GetPlayerFromId(source)
+	local blackMoney = xPlayer.getAccount('black_money').money
+    cb(blackMoney)
+end)
+
 ESX.RegisterServerCallback('renzu_jobs:getPlayerInventory', function(source, cb, job, type)
 	local xPlayer    = ESX.GetPlayerFromId(source)
 	local blackMoney = xPlayer.getAccount('black_money').money
