@@ -519,6 +519,7 @@
                 <form id="manage" method="post">
                 <label for="url" style="
                 display: block;
+                width: 80%;
                 background: #011a40;
                 margin-right: 5px;
                 height: 40px;

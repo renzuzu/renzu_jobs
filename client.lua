@@ -730,13 +730,18 @@ end)
 
 RegisterNUICallback('moneywash', function(data, cb)
     ESX.TriggerServerCallback("renzu_jobs:washmoney",function(a)
-        if a then
+        if a == true then
             TriggerEvent('renzu_notify:Notify', 'info','Customs', 'Money is being Washed')
+            SetNuiFocus(false,false)
+            cb(a)
+        elseif a == 'notenough' then
+            SetNuiFocus(true,true)
+            cb(false)
         else
             TriggerEvent('renzu_notify:Notify', 'error','Customs', 'Machine already in use')
+            SetNuiFocus(false,false)
+            cb(a)
         end
-        SetNuiFocus(false,false)
-        cb(a)
     end,data.amount,currentwash)
 end)
 

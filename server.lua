@@ -1138,6 +1138,11 @@ ESX.RegisterServerCallback('renzu_jobs:washmoney', function(source, cb, amount, 
         DropPlayer(source,'is this bug?')
         return
     end
+    if xPlayer.getAccount('black_money').money < tonumber(amount) then
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'warning','Job', 'Black money onhand is insufficient')
+        cb('notenough')
+        return
+    end
     if not config.MoneyWash[id].inuse then
         Citizen.CreateThread(function()
             local src = source
@@ -1158,6 +1163,7 @@ ESX.RegisterServerCallback('renzu_jobs:washmoney', function(source, cb, amount, 
             else
                 local money = Round(tonumber(amount) * (1-config.MoneyWashTax))
                 addMoney(tonumber(money),config.MoneyWashOwner,src,'money')
+                TriggerClientEvent('renzu_jobs:washuse',-1, id,config.MoneyWash[id].inuse)
                 TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Money is Successfuly Washed and someone took it')
             end
         end)
