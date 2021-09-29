@@ -1,0 +1,6 @@
+THIS PARTS IS OPTIONAL
+
+main.lua is for restarting or refreshing jobs in ESX
+
+paycheck files is the paycheck system to replace and use the job money here in renzu_jobs when society payout is enable in your ESX
+pay attention to the version . LEGACY is for esx_legacy only
