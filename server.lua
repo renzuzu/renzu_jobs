@@ -55,9 +55,12 @@ end)
 
 function JobMoney(job)
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
-    local ret = json.decode(result[1].accounts) or {}
-    
-    return ret or {money=0,black_money=0}
+    if result[1] then
+        local ret = json.decode(result[1].accounts) or {}
+        return ret or {money=0,black_money=0}
+    else
+        return {money=0,black_money=0}
+    end
 end
 
 function removeMoney(amount,job,source,money_type,export)
