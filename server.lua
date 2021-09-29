@@ -798,7 +798,7 @@ ESX.RegisterServerCallback('renzu_jobs:craftitem', function(source, cb, item, am
                     notenoughcabron = true
                 end
             end
-            if not Cancarry(xPlayer,item,tonumber(amount) then
+            if not Cancarry(xPlayer,item,tonumber(amount)) then
                 TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough inventory space')
                 cb(false)
             end
