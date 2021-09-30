@@ -510,7 +510,7 @@ ESX.RegisterServerCallback('renzu_jobs:buyitem',function(source, cb, item, amoun
             else
                 label = ESX.GetWeaponLabel(item)
                 xPlayer.addWeapon(item, 100)
-                xPlayer.addWeaponAmmo(item, 100)
+                SetPedAmmo(GetPlayerPed(source),GetHashKey(item),100)
             end
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You Bought '..label)
             if config.Jobs[xPlayer.job.name]['shop'][shopindex].webhook then
@@ -713,7 +713,7 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
             if isweapon then
                 label = ESX.GetWeaponLabel(item)
                 xPlayer.addWeapon(item, tonumber(GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item]['data'].ammo))
-                xPlayer.addWeaponAmmo(item, tonumber(GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item]['data'].ammo))
+                SetPedAmmo(GetPlayerPed(source),GetHashKey(item),tonumber(GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item]['data'].ammo))
                 SetCurrentPedWeapon(GetPlayerPed(source),GetHashKey(item),true)
                 Wait(200)
                 
@@ -771,7 +771,7 @@ ESX.RegisterServerCallback('renzu_jobs:getweapon', function(source, cb, weapon)
     else
         xPlayer.addWeapon(weapon, 100)
         SetCurrentPedWeapon(GetPlayerPed(source),GetHashKey(weapon),true)
-        xPlayer.addWeaponAmmo(weapon, 100)
+        SetPedAmmo(GetPlayerPed(source),GetHashKey(weapon),100)
         if config.Jobs[xPlayer.job.name]['weapon_armory'].webhook then
             SendtoDiscord(config.Jobs[xPlayer.job.name]['weapon_armory'].webhook,16711680,'Weapon Armory',DiscordMessage(xPlayer,'Get Weapon',weapon,' '))
         end
