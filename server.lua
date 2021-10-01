@@ -499,8 +499,8 @@ ESX.RegisterServerCallback('renzu_jobs:buyitem',function(source, cb, item, amoun
                 break
             end
         end
-        value = value * amount
-        if found and tonumber(amount) > 0 and xPlayer.getMoney() >= tonumber(value) and Cancarry(xPlayer,item,amount) then
+        value = value * tonumber(amount)
+        if found and tonumber(amount) > 0 and xPlayer.getMoney() >= tonumber(value) and Cancarry(xPlayer,item,tonumber(amount)) then
             addMoney(tonumber(value),job,source,'money')
             xPlayer.removeMoney(tonumber(value))
             local label = nil
@@ -517,7 +517,7 @@ ESX.RegisterServerCallback('renzu_jobs:buyitem',function(source, cb, item, amoun
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['shop'][shopindex].webhook,16711680,config.Jobs[xPlayer.job.name]['shop'][shopindex].label,DiscordMessage(xPlayer,'Buy item',label..' '..amount,' '))
             end
             cb(true)
-        elseif not Cancarry(xPlayer,item,amount) and found then
+        elseif not Cancarry(xPlayer,item,tonumber(amount)) and found then
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have inventory space')
             cb(false)
         elseif found then
@@ -682,6 +682,7 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
         i = {count = xPlayer.getAccount('black_money').money}
     end
     local amount = tonumber(amount)
+    local callback = false
     --
     local isweapon = string.find(item:upper(), "WEAPON_")
     if config.Jobs[xPlayer.job.name] ~= nil and config.Jobs[xPlayer.job.name]['inventory'][inv_type].grade <= xPlayer.job.grade then
@@ -698,14 +699,15 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
                 label = 'Black Money'
                 xPlayer.removeAccountMoney('black_money',tonumber(amount))
             end
+            callback = true
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You deposit '..label..' x'..amount)
             if config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook,16711680,'Inventory',DiscordMessage(xPlayer,'Deposit Item',label..' x'..amount,inv_type..' Inventory'))
             end
-            cb(true)
+            cb(callback)
         elseif type == 1 then
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have enough')
-            cb(false)
+            cb(callback)
         end
         if not isweapon and type == 0 and tonumber(amount) > 0 and GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item] >= amount 
         or type == 0 and isweapon and GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item]['data'] ~= nil then
@@ -730,9 +732,11 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
                 if Cancarry(xPlayer,item,amount) then
                     label = ESX.GetItemLabel(item)
                     xPlayer.addInventoryItem(item, tonumber(amount))
+                    callback = true
                 else
                     TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough inventory space')
-                    cb(false)
+                    callback = false
+                    return
                 end
             elseif item == 'black_money' and not config.black_money_item then
                 label = 'Black Money'
@@ -743,15 +747,15 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
             if config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook,16711680,'Inventory',DiscordMessage(xPlayer,'Withdraw Item',label..' x'..amount,inv_type..' Inventory'))
             end
-            cb(true)
+            cb(callback)
         elseif type == 0 then
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough stock')
-            cb(false)
+            cb(callback)
         end
         
     else
         TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have a permission to access')
-        cb(false)
+        cb(callback)
     end
 end)
 
@@ -786,6 +790,7 @@ ESX.RegisterServerCallback('renzu_jobs:craftitem', function(source, cb, item, am
 	local xPlayer    = ESX.GetPlayerFromId(source)
     local conf = config.Jobs[xPlayer.job.name]['crafting']['craftable'][item]
     local isweapon = string.find(item:upper(), "WEAPON_")
+    local callback = false
     if isweapon and tonumber(amount) > 1 then
         TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You can only craft weapons one at a time')
     elseif ongoingcrafting[source] == nil then
@@ -801,11 +806,13 @@ ESX.RegisterServerCallback('renzu_jobs:craftitem', function(source, cb, item, am
             end
             if not Cancarry(xPlayer,item,tonumber(amount)) then
                 TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough inventory space')
-                cb(false)
+                callback = false
+                return
             end
             if notenoughcabron then
                 TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough requirement')
             else
+                callback = true
                 ongoingcrafting[source] = true
                 Citizen.CreateThread(function() -- incase lower fxserver
                     FreezeEntityPosition(GetPlayerPed(source),true)
