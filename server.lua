@@ -476,7 +476,7 @@ ESX.RegisterServerCallback('renzu_jobs:changesalary', function (source, cb, grad
 end)
 
 function Cancarry(xPlayer,item,amount)
-    if config.esx == '1.1' and xPlayer.getInventoryItem(item).limit >= (xPlayer.getInventoryItem(item).count + tonumber(amount)) then
+    if config.esx == '1.1' and item ~= nil and xPlayer.getInventoryItem(item) and xPlayer.getInventoryItem(item).limit >= (xPlayer.getInventoryItem(item).count + tonumber(amount)) then
         return true
     elseif config.esx == '1.2' and xPlayer.canCarryItem(item,tonumber(amount)) then
         return true
@@ -742,8 +742,10 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
                 label = 'Black Money'
                 xPlayer.addAccountMoney('black_money',tonumber(amount))
             end
-            removeItem(xPlayer.job.name,item,amount,source,inv_type,xPlayer,slot)
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You withdraw '..label..' x'..amount)
+            if callback then
+                removeItem(xPlayer.job.name,item,amount,source,inv_type,xPlayer,slot)
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You withdraw '..label..' x'..amount)
+            end
             if config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook,16711680,'Inventory',DiscordMessage(xPlayer,'Withdraw Item',label..' x'..amount,inv_type..' Inventory'))
             end
