@@ -476,7 +476,9 @@ ESX.RegisterServerCallback('renzu_jobs:changesalary', function (source, cb, grad
 end)
 
 function Cancarry(xPlayer,item,amount)
-    if config.esx == '1.1' and item ~= nil and xPlayer.getInventoryItem(item) and xPlayer.getInventoryItem(item).limit >= (xPlayer.getInventoryItem(item).count + tonumber(amount)) then
+    if string.find(item:upper(), "WEAPON_") and not xPlayer.hasWeapon(item) then
+        return true
+    elseif config.esx == '1.1' and item ~= nil and xPlayer.getInventoryItem(item) and xPlayer.getInventoryItem(item).limit >= (xPlayer.getInventoryItem(item).count + tonumber(amount)) then
         return true
     elseif config.esx == '1.2' and xPlayer.canCarryItem(item,tonumber(amount)) then
         return true
@@ -710,9 +712,9 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
             cb(callback)
         end
         if not isweapon and type == 0 and tonumber(amount) > 0 and GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item] >= amount 
-        or type == 0 and isweapon and GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item]['data'] ~= nil then
+        or type == 0 and isweapon and GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item]['data'] ~= nil and not xPlayer.hasWeapon(item) then
             local label = nil
-            if isweapon then
+            if isweapon and not xPlayer.hasWeapon(item) then
                 label = ESX.GetWeaponLabel(item)
                 xPlayer.addWeapon(item, tonumber(GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item]['data'].ammo))
                 SetPedAmmo(GetPlayerPed(source),GetHashKey(item),tonumber(GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item]['data'].ammo))
@@ -806,14 +808,9 @@ ESX.RegisterServerCallback('renzu_jobs:craftitem', function(source, cb, item, am
                     notenoughcabron = true
                 end
             end
-            if not Cancarry(xPlayer,item,tonumber(amount)) then
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough inventory space')
-                callback = false
-                return
-            end
             if notenoughcabron then
                 TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough requirement')
-            else
+            elseif Cancarry(xPlayer,item,tonumber(amount)) then
                 callback = true
                 ongoingcrafting[source] = true
                 Citizen.CreateThread(function() -- incase lower fxserver
@@ -864,6 +861,10 @@ ESX.RegisterServerCallback('renzu_jobs:craftitem', function(source, cb, item, am
                 if config.Jobs[xPlayer.job.name]['crafting'].webhook then
                     SendtoDiscord(config.Jobs[xPlayer.job.name]['crafting'].webhook,16711680,config.Jobs[xPlayer.job.name]['crafting'].label,DiscordMessage(xPlayer,'Craft a item ',item..' x'..amount,' '))
                 end
+            elseif not Cancarry(xPlayer,item,tonumber(amount)) then
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough inventory space')
+                callback = false
+                return
             end
         else
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Crafting Table', 'item not exist in this crafting table')
