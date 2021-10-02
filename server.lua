@@ -730,6 +730,7 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
                         xPlayer.addWeaponComponent(tostring(item), tostring(v))
                     end
                 end
+                callback = true
             elseif item ~= 'black_money' or config.black_money_item then
                 if Cancarry(xPlayer,item,amount) then
                     label = ESX.GetItemLabel(item)
