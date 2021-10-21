@@ -743,6 +743,7 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
                 end
             elseif item == 'black_money' and not config.black_money_item then
                 label = 'Black Money'
+                callback = true
                 xPlayer.addAccountMoney('black_money',tonumber(amount))
             end
             if callback then
