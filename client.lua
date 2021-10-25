@@ -45,18 +45,23 @@ local invcache = {}
 local jobinvcache = {}
 function OpenInventory(job,type)
     local job = PlayerData.job.name
-    ESX.TriggerServerCallback('renzu_jobs:getPlayerInventory', function(inventory)
-        SendNUIMessage({
-            type = 'showinv',
-            content = {inventory = inventory.playerinventory, job_inventory = inventory.inventory, logo = config.logo, img = config.inventoryImageUrl}
-        })
-        inv_type = type
-        Wait(50)
-        invcache = inventory.playerinventory
-        jobinvcache = inventory.inventory
-        SetNuiFocus(true,true)
-        SetNuiFocusKeepInput(false)
-    end,job,type)
+    if config.useOxInventory then
+        print("GAGO")
+        TriggerEvent('ox_inventory:openInventory', 'stash', {id = ''..job..'_'..type..'', name = type, slots = 70, weight = 10000, coords = GetEntityCoords(PlayerPedId())})
+    else
+        ESX.TriggerServerCallback('renzu_jobs:getPlayerInventory', function(inventory)
+            SendNUIMessage({
+                type = 'showinv',
+                content = {inventory = inventory.playerinventory, job_inventory = inventory.inventory, logo = config.logo, img = config.inventoryImageUrl}
+            })
+            inv_type = type
+            Wait(50)
+            invcache = inventory.playerinventory
+            jobinvcache = inventory.inventory
+            SetNuiFocus(true,true)
+            SetNuiFocusKeepInput(false)
+        end,job,type)
+    end
 end
 
 function OpenWeaponMenu()
@@ -1296,7 +1301,60 @@ function GetVehicleClassnamemodel(vehicle)
     return classlist(class)
 end
 
+function OpenInteraction_Menu_default()
+	local elements = {}
+    local menus = {}
+    for k,v in pairs(config.Jobs[PlayerData.job.name]['interaction']) do
+        for index,t in pairs(v) do
+            local interaction = config[t.type][t.index].label
+            if menus[k] == nil then menus[k] = {} end
+            table.insert(menus[k], {
+                label      = interaction,
+                server      = config[t.type][t.index].server or false,
+                value      = config[t.type][t.index].name,
+                args      = config[t.type][t.index].args or {},
+            })
+            print(interaction)
+        end
+        table.insert(elements, {
+            label      = k,
+            value      = menus[k],
+        })
+	end
+
+	ESX.UI.Menu.CloseAll()
+
+	ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'shop', {
+		title    = 'Job Menu',
+		align    = 'bottom-right',
+		elements = elements
+	}, function(data, menu)
+		ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'shop_confirm', {
+			title    = 'Confirm',
+			align    = 'bottom-right',
+			elements = data.current.value
+        }, function(data2, menu2)
+			if data2.current.server == 'yes' then
+                print("server")
+				TriggerServerEvent(data2.current.value, data2.current.args)
+            else
+                print("client")
+                TriggerEvent(data2.current.value, data2.current.args)
+			end
+            ESX.UI.Menu.CloseAll()
+
+			menu2.close()
+		end, function(data2, menu2)
+			menu2.close()
+		end)
+	end, function(data, menu)
+		menu.close()
+	end)
+end
+
 function OpenInteraction()
+    if config.esx_menu then OpenInteraction_Menu_default() return end
+    if not config.Jobs[PlayerData.job.name] or config.Jobs[PlayerData.job.name]['interaction'] then return end
     local multimenu = {}
     local firstmenu = {}
     local openmenu = false
@@ -1325,6 +1383,10 @@ function OpenInteraction()
     end
 end
 
-RegisterCommand('interaction', function(source, args, rawCommand)
-    OpenInteraction()
+CreateThread(function()
+	RegisterKeyMapping(config.commands, 'Interaction Menu', 'keyboard', config.keybinds)
+    RegisterCommand(config.commands, function(source, args, rawCommand)
+        OpenInteraction()
+    end)
+    return
 end)

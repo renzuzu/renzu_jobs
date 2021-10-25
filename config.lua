@@ -1,9 +1,16 @@
 config = {}
 -- MAIN CONFIG
-config.Mysql = 'ghmattisql' -- "ghmattisql", "mysql-async"
+config.Mysql = 'mysql-async' -- "ghmattisql", "mysql-async"
 config.esx = '1.2' -- 1.1 or 1.2 , 1.2 are v1final and esx legacy is compatible
 config.css = 'new' -- new or old -- new = 4 column, old 2 column
 config.logo = 'https://forum.cfx.re/uploads/default/original/4X/b/1/9/b196908c7e5dfcd60aa9dca0020119fa55e184cb.png' -- url of logo
+config.esx_menu = true -- interaction menu if false, contextual menu
+config.keybinds = 'F6' -- Keybinds
+config.commands = 'interaction'
+
+-- INVENTORY OX (WIP do not use, weapon armory will not work if you use ox inv, ill update soon for newer ESX (infinity))
+config.useOxInventory = false -- will disable all built in inventory of renzu_jobs, and will use the ox_inventory data
+-- INVENTORY OX
 
 config.RandomAvatars = { -- if player pedshot is not uploaded yet, we will use Initials avatar
     [1] = {background = 'ffffff', color = '308BFF'},

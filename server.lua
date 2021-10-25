@@ -9,10 +9,10 @@ CreateThread(function()
     Wait(200)
     local registeredjobs = {}
     playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users', {})
-    jobs = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
+    jobsclass = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
     existing = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs', {})
     
-    for k,v in pairs(jobs) do
+    for k,v in pairs(jobsclass) do
         
         if jobtable[v.job_name] == nil then jobtable[v.job_name] = {} end
         if jobtable[v.job_name][tostring(v.grade)] == nil then jobtable[v.job_name][tostring(v.grade)] = v.label end
@@ -1265,28 +1265,38 @@ ESX.RegisterServerCallback('renzu_jobs:getPlayerInventory', function(source, cb,
 end)
 
 function SqlFunc(plugin,type,query,var)
-    local query = query
-    local type= type
-    local var = var
-    local plugin = plugin
+	local wait = promise.new()
     if type == 'fetchAll' and plugin == 'mysql-async' then
-        local ret = MySQL.Sync.fetchAll(query, var)
-        return ret
+		MySQL.Async.fetchAll(query, var, function(result)
+            wait:resolve(result)
+        end)
     end
     if type == 'execute' and plugin == 'mysql-async' then
-        MySQL.Sync.execute(query,var) 
+        MySQL.Async.execute(query, var, function(result)
+            wait:resolve(result)
+        end)
     end
     if type == 'execute' and plugin == 'ghmattisql' then
-        exports['ghmattimysql']:execute(query, var)
+        exports['ghmattimysql']:execute(query, var, function(result)
+            wait:resolve(result)
+        end)
     end
     if type == 'fetchAll' and plugin == 'ghmattisql' then
-        local data = nil
         exports.ghmattimysql:execute(query, var, function(result)
-            data = result
+            wait:resolve(result)
         end)
-        while data == nil do Wait(0) end
-        return data
     end
+    if type == 'execute' and plugin == 'oxmysql' then
+        exports.oxmysql:execute(query, var, function(result)
+            wait:resolve(result)
+        end)
+    end
+    if type == 'fetchAll' and plugin == 'oxmysql' then
+		exports['oxmysql']:fetch(query, var, function(result)
+			wait:resolve(result)
+		end)
+    end
+	return Citizen.Await(wait)
 end
 
 RegisterCommand('job', function(source,args)
