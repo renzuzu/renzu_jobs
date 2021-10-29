@@ -53,7 +53,8 @@ CreateThread(function()
     print("Renzu Jobs LOADED")
 end)
 
-function JobMoney(job)
+function JobMoney(job,paycheck)
+    if paycheck and config.FreePaycheck[job] then return {money=99999999,black_money=99999999} end
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
     if result[1] then
         local ret = json.decode(result[1].accounts) or {}
@@ -63,7 +64,8 @@ function JobMoney(job)
     end
 end
 
-function removeMoney(amount,job,source,money_type,export)
+function removeMoney(amount,job,source,money_type,export,paycheck)
+    if paycheck then return end
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
     local jobaccount = json.decode(result[1].accounts) or {}
     jobaccount[money_type] = tonumber(jobaccount[money_type]) - tonumber(amount)

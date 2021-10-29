@@ -13,9 +13,9 @@ StartPayCheck = function()
 						xPlayer.addAccountMoney('bank', salary)
 						TriggerClientEvent('esx:showAdvancedNotification', xPlayer.source, _U('bank'), _U('received_paycheck'), _U('received_help', salary), 'CHAR_BANK_MAZE', 9)
 					elseif Config.EnableSocietyPayouts then -- possibly a society
-						if tonumber(exports.renzu_jobs:JobMoney(job).money) >= salary then -- does the society money to pay its employees?
+						if tonumber(exports.renzu_jobs:JobMoney(job).money,true) >= salary then -- does the society money to pay its employees?
 							xPlayer.addAccountMoney('bank', salary)
-							removemoney = exports.renzu_jobs:removeMoney(tonumber(salary),job,source,'money',true)
+							removemoney = exports.renzu_jobs:removeMoney(tonumber(salary),job,source,'money',true,true)
 
 							TriggerClientEvent('esx:showAdvancedNotification', xPlayer.source, _U('bank'), _U('received_paycheck'), _U('received_salary', salary), 'CHAR_BANK_MAZE', 9)
 						else

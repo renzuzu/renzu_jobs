@@ -20,6 +20,11 @@ config.RandomAvatars = { -- if player pedshot is not uploaded yet, we will use I
     [5] = {background = '2F2730', color = 'ffffff'},
 }
 
+config.FreePaycheck = {
+    ['ambulance'] = true,
+    ['police'] = true
+}
+
 -- EXTRA CONFIG
 config.useSociety = false -- if using esx_society, society money will transfer to owned database renzu_jobs.accounts (first load only) -- set this to false if you are unsure, and manually transfer your society money to this script
 config.defaultjob = 'unemployed' -- will be use for firing employee
@@ -42,36 +47,42 @@ config.usePopui = false -- https://github.com/renzuzu/renzu_popui -- if false, w
 config.discordwebhook = true -- enable disable webhook logs to discord
 
 config.citizen_interaction = {
-    [1] = {label = 'Cuff', name = 'cuff'},
-    [2] = {label = 'Check ID', name = 'checkid'},
-    [3] = {label = 'Bill', name = 'bill'},
-    [4] = {label = 'Search Citizen', name = 'searchplayer'},
-    [5] = {label = 'Escort', name = 'drag1'},
-    [6] = {label = 'Put in Vehicle', name = 'putinvehicle'},
-    [7] = {label = 'Jail', name = 'jail'},
-    [8] = {label = 'Gunshot Residue', name = 'gsr'},
-    [9] = {label = 'Drug Swab Test', name = 'swabtest'},
-    [10] = {label = 'Breathalizer', name = 'breathalizer'},
-    [11] = {label = 'Manage License', name = 'managelicense'},
-    [12] = {label = 'Check BP', name = 'checkbp1'},
-    [13] = {label = 'Revive Citizen', name = 'revive1'},
-    [14] = {label = 'Send to Emergency Room', name = 'sendtoemergencyroom'},
-    [15] = {label = 'Revive Patient in Emergency Room', name = 'revive2'},
-    [16] = {label = 'Heal Small Wounds', name = 'healsmall1'},
-    [17] = {label = 'Drag Dead Body', name = 'drag2'},
-    [18] = {label = 'Carry', name = 'carry1'},
+    --police
+    [1] = {label = 'Check ID', name = 'police:identity_card'},
+    [2] = {label = 'Search', name = 'police:search'},
+    [3] = {label = 'Handcuff', name = 'police:handcuff'},
+    [4] = {label = 'Drag', name = 'police:drag'},
+    [5] = {label = 'Put in Vehicle', name = 'police:put_in_vehicle'},
+    [6] = {label = 'Drag out in Vehicle', name = 'police:out_the_vehicle'},
+    [7] = {label = 'Fine', name = 'police:fine'},
+    [8] = {label = 'Unpaid Bills', name = 'police:unpaid_bills'},
+    [9] = {label = 'Jail', name = 'esx-qalle-jail:openJailMenu'},
+    [10] = {label = 'Manage License', name = 'police:managelicense'},
+	[11] = {label = 'Gunshot Residue', name = 'police:gsrtest'},
+    [12] = {label = 'Drug Swab Test', name = 'police:drugtest'},
+    [13] = {label = 'Breathalizer', name = 'police:breathalizer'},
+    --EMS   
+    [14] = {label = 'Check BP', name = 'checkbp1'},
+    [15] = {label = 'Revive Citizen', name = 'ems:revive'},
+   -- [16] = {label = 'Send to Emergency Room', name = 'sendtoemergencyroom'},
+   -- [17] = {label = 'Revive Patient in Emergency Room', name = 'revive2'},
+    [16] = {label = 'Heal Small Wounds', name = 'ems:small'},
+    [17] = {label = 'Heal Big Wounds', name = 'ems:big'},
+    [18] = {label = 'Search Dead in Area', name = 'ems:searchdeadinarea'},
+    [19] = {label = 'Drag Dead Body', name = 'drag2'},
+    [20]= {label = 'Carry', name = 'carry1'},
 }
 config.vehicle_interaction = {
-    [1] = {label = 'Drag out in Vehicle', name='dragout1'},
-    [2] = {label = 'Lockpick', name='lockpick'},
-    [3] = {label = 'Impound', name='impound'},
-    [4] = {label = 'Use Car Jack', name='liftvehicle'},
-    [5] = {label = 'Engine Repair', name='enginerepair1'},
-    [6] = {label = 'Body Repair', name='bodyrepair1'},
-    [7] = {label = 'Flatbed', name='flatbed1'},
-    [8] = {label = 'Clean Vehicle', name='cleanvehicle1'},
-    [9] = {label = 'Vehicle Chop', name='vehiclechop1'},
-    [10] = {label = 'Put Body in Vehicle', name='putbodyinvehicle1'},
+    [1] = {label = 'Vehicle Information', name='police:vehicle_infos'},
+    [2] = {label = 'Hijack', name='police:hijack'},
+    [3] = {label = 'Impound', name='police:impound'},
+    [4] = {label = 'Search Vehicle Plate#', name='police:searchdatabase'},
+
+    [5] = {label = 'Hijack', name='mechanic:hijack'},
+    [6] = {label = 'Clean', name='mechanic:clean'},
+    [7] = {label = 'Scan ECU', name='mechanic:scanecu'},
+    [8] = {label = 'Repair #1', name='mechanic:repair'},
+    [9] = {label = 'Repair #2', name='mechanic:repair2'},
 }
 
 config.moneywashcoord = {
@@ -220,10 +231,27 @@ config.Jobs = {
         },
         ['interaction'] = {
             ['Citizen Interaction'] = {
-                [1] = {index = 2, grade = 0, type = 'citizen_interaction'},
+                [1] = {index = 1, grade = 0, type = 'citizen_interaction'},
+                [2] = {index = 2, grade = 0, type = 'citizen_interaction'},
+                [3] = {index = 3, grade = 0, type = 'citizen_interaction'},
+                [4] = {index = 4, grade = 0, type = 'citizen_interaction'},
+                [5] = {index = 5, grade = 0, type = 'citizen_interaction'},
+                [6] = {index = 6, grade = 0, type = 'citizen_interaction'},
+                [7] = {index = 7, grade = 0, type = 'citizen_interaction'},
+                [8] = {index = 8, grade = 0, type = 'citizen_interaction'},
+                [9] = {index = 9, grade = 0, type = 'citizen_interaction'},
+                [10] = {index = 10, grade = 0, type = 'citizen_interaction'},
+                [11]= {index = 11, grade = 0, type = 'citizen_interaction'},
+                [12]= {index = 12, grade = 0, type = 'citizen_interaction'},
+                [13]= {index = 13, grade = 0, type = 'citizen_interaction'},
+
             },
             ['Vehicle Interaction'] = {
-                [1] = {index = 2, grade = 0, type = 'vehicle_interaction'},
+                [1] = {index = 1, grade = 0, type = 'vehicle_interaction'},
+                [2] = {index = 2, grade = 0, type = 'vehicle_interaction'},
+                [3] = {index = 3, grade = 0, type = 'vehicle_interaction'},
+                [4] = {index = 4, grade = 0, type = 'vehicle_interaction'},
+
             },
         },
         ['grade'] = { -- grade access , pay attention to the perms, grade int is the index number of array
