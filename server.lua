@@ -62,19 +62,22 @@ function JobMoney(job,paycheck)
     else
         return {money=0,black_money=0}
     end
+    return {money=0,black_money=0}
 end
 
 function removeMoney(amount,job,source,money_type,export,paycheck)
     if paycheck then return end
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})
-    local jobaccount = json.decode(result[1].accounts) or {}
-    jobaccount[money_type] = tonumber(jobaccount[money_type]) - tonumber(amount)
-    SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
-        ['@name'] = job,
-        ['@accounts'] = json.encode(jobaccount)
-    })
-    if not export then
-        TriggerClientEvent('renzu_jobs:updatemoney',source,jobaccount)
+    if result[1] then
+        local jobaccount = json.decode(result[1].accounts) or {}
+        jobaccount[money_type] = tonumber(jobaccount[money_type]) - tonumber(amount)
+        SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
+            ['@name'] = job,
+            ['@accounts'] = json.encode(jobaccount)
+        })
+        if not export then
+            TriggerClientEvent('renzu_jobs:updatemoney',source,jobaccount)
+        end
     end
 end
 
@@ -92,16 +95,16 @@ function addMoney(amount,job,source,money_type,export)
     end
 end
 
-exports('JobMoney', function(job)
-    return JobMoney(job)
+exports('JobMoney', function(job,paycheck)
+    return JobMoney(job,paycheck)
 end)
 
 exports('addMoney', function(amount,job,source,money_type,e)
     return addMoney(amount,job,source,money_type,e)
 end)
 
-exports('removeMoney', function(amount,job,source,money_type,e)
-    return removeMoney(amount,job,source,money_type,e)
+exports('removeMoney', function(amount,job,source,money_type,e,paycheck)
+    return removeMoney(amount,job,source,money_type,e,paycheck)
 end)
 
 function addItem(job,item,amount,source,type,xPlayer)
