@@ -8,6 +8,7 @@ config.keybinds = 'F6' -- Keybinds
 config.commands = 'interaction'
 config.esx_menu = true -- interaction menu if false, contextual menu
 config.useOxInventory = false -- will disable all built in inventory of renzu_jobs, and will use the ox_inventory data
+config.renzu_Clothes = false
 
 config.RandomAvatars = { -- if player pedshot is not uploaded yet, we will use Initials avatar
     [1] = {background = 'ffffff', color = '308BFF'},
