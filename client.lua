@@ -47,7 +47,7 @@ function OpenInventory(job,type)
     local job = PlayerData.job.name
     if config.useOxInventory then
         print("GAGO")
-        TriggerEvent('ox_inventory:openInventory', 'stash', {id = ''..job..'_'..type..'', name = type, slots = 70, weight = 10000, coords = GetEntityCoords(PlayerPedId())})
+        TriggerEvent('ox_inventory:openInventory', 'stash', {id = ''..job..'_'..type..'', name = ''..job..'_'..type..'', slots = 70, weight = 1000000, coords = GetEntityCoords(PlayerPedId())})
     else
         ESX.TriggerServerCallback('renzu_jobs:getPlayerInventory', function(inventory)
             SendNUIMessage({
@@ -520,7 +520,7 @@ function ShowFloatingHelpNotification(msg, coords)
     EndTextCommandDisplayHelp(2, false, false, -1)
 end
 
-function DrawMarkerInput(vec,msg,event,server,name,job,d)
+function DrawMarkerInput(vec,msg,event,server,name,job,d,nomarker)
     local d = d
     if d == nil then d = 3 end
     if markers[name] == nil and not config.usePopui or markers[name] == nil and config.showmarker and config.usePopui then
@@ -532,8 +532,8 @@ function DrawMarkerInput(vec,msg,event,server,name,job,d)
             while #(vec - coord) <= d and not cancel and not setjob do
                 Citizen.Wait(5)
                 coord = GetEntityCoords(ped)
-                if config.showmarker then
-                    DrawMarker(22, vec.x,vec.y,vec.z ,0,0,0,0,0,1.0,1.0,1.0,1.0,255, 255, 220,200,0,0,0,1)
+                if config.showmarker and not nomarker then
+                    DrawMarker(22, vec.x,vec.y,vec.z ,0,0,0,0,0,0.5,0.5,0.5,0.5,255, 255, 220,200,0,0,0,1)
                 end
                 if not config.usePopui and #(vec - coord) < 1.5 then
                     ShowFloatingHelpNotification("Press [E] "..msg,vec)
@@ -550,6 +550,7 @@ function DrawMarkerInput(vec,msg,event,server,name,job,d)
                     end
                 end
             end
+            Wait(500)
             markers[name] = nil
             return
         end)
@@ -565,6 +566,36 @@ Citizen.CreateThread(function()
         local job = PlayerData.job.name
         local coord = GetEntityCoords(PlayerPedId())
         for k2,shop in pairs(config.Jobs) do
+            if shop['public_inventory'] then
+                for k,v in pairs(shop['public_inventory']) do
+                    local k = k
+                    if #(GetEntityCoords(PlayerPedId()) - v.coord) < 3 then
+                        DrawMarkerInput(v.coord,v.label,v.event,false,k,k2,3,true)
+                        if config.usePopui then
+                            local dist = #(coord - v.coord)
+                            if dist < 3 then
+                                local table = {
+                                    ['key'] = 'E', -- key
+                                    ['event'] = 'renzu_jobs:openinventory',
+                                    ['title'] = 'Press [E] Open '..v.label,
+                                    ['server_event'] = false, -- server event or client
+                                    ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
+                                    ['fa'] = '<i class="fal fa-store"></i>',
+                                    ['custom_arg'] = {k,k2}, -- example: {1,2,3,4}
+                                }
+                                TriggerEvent('renzu_popui:drawtextuiwithinput',table)
+                                cancel = false
+                                while dist < 3 and not cancel do
+                                    coord = GetEntityCoords(PlayerPedId())
+                                    dist = #(coord - v.coord)
+                                    Wait(500)
+                                end
+                                TriggerEvent('renzu_popui:closeui')
+                            end
+                        end
+                    end
+                end
+            end
             if shop['shop'] then
                 for k,v in ipairs(shop['shop']) do
                     local k = tonumber(k)
@@ -779,15 +810,15 @@ Citizen.CreateThread(function()
         if jobtable ~= nil then
             for k,v in pairs(jobtable) do
                 --print(k ~= 'max_salary' , not invehicle , jobtable[k] ~= nil , jobtable[k].coord ~= nil , jobtable[k].coord , coord , grade , jobtable[k].grade)
-                if k ~= 'max_salary' and not invehicle and jobtable[k] ~= nil and jobtable[k].coord ~= nil and #(jobtable[k].coord - coord) < 3 and grade >= jobtable[k].grade then
+                if k ~= 'public_inventory' and k ~= 'max_salary' and not invehicle and jobtable[k] ~= nil and jobtable[k].coord ~= nil and #(jobtable[k].coord - coord) < 3 and grade >= jobtable[k].grade then
                     DrawMarkerInput(jobtable[k].coord,jobtable[k].label,jobtable[k].event,false,k)
-                elseif k == 'garage' and invehicle and jobtable[k] ~= nil and jobtable[k].spawn ~= nil and #(vector3(jobtable[k].spawn.x,jobtable[k].spawn.y,jobtable[k].spawn.z) - coord) < 3 and grade >= jobtable[k].grade then
+                elseif k ~= 'public_inventory' and k == 'garage' and invehicle and jobtable[k] ~= nil and jobtable[k].spawn ~= nil and #(vector3(jobtable[k].spawn.x,jobtable[k].spawn.y,jobtable[k].spawn.z) - coord) < 3 and grade >= jobtable[k].grade then
                     DrawMarkerInput(vector3(jobtable[k].spawn.x,jobtable[k].spawn.y,jobtable[k].spawn.z),jobtable[k].label,jobtable[k].event,false,k)
                 end
             end
             for k,v in pairs(jobtable['inventory']) do
                 if k ~= 'max_salary' and v ~= nil and v.coord ~= nil and #(v.coord - coord) < 3 and grade >= v.grade then
-                    DrawMarkerInput(v.coord,v.label,v.event,false,k)
+                    DrawMarkerInput(v.coord,v.label,v.event,false,k,3,3,true)
                 end
             end
             local boss_dist = #(coord - jobtable['bossmenu'].coord) -- boss menus
@@ -986,18 +1017,22 @@ end)
 
 RegisterNetEvent('renzu_jobs:openwardrobe')
 AddEventHandler('renzu_jobs:openwardrobe', function(job)
-	OpenClotheMenu(false,false,{
-		'tshirt_1', 'tshirt_2',
-		'torso_1', 'torso_2',
-		'decals_1', 'decals_2',
-		'arms',
-		'pants_1', 'pants_2',
-		'shoes_1', 'shoes_2',
-        'bags_1', 'bags_2',
-		'chain_1', 'chain_2',
-		'helmet_1', 'helmet_2',
-		'glasses_1', 'glasses_2'
-	})
+    if config.renzu_Clothes then
+        exports.renzu_clothes:OpenClotheInventory()
+    else
+        OpenClotheMenu(false,false,{
+            'tshirt_1', 'tshirt_2',
+            'torso_1', 'torso_2',
+            'decals_1', 'decals_2',
+            'arms',
+            'pants_1', 'pants_2',
+            'shoes_1', 'shoes_2',
+            'bags_1', 'bags_2',
+            'chain_1', 'chain_2',
+            'helmet_1', 'helmet_2',
+            'glasses_1', 'glasses_2'
+        })
+    end
 end)
 
 local maxcolor = {}
@@ -1353,8 +1388,11 @@ function OpenInteraction_Menu_default()
 end
 
 function OpenInteraction()
+    print("1")
     if config.esx_menu then OpenInteraction_Menu_default() return end
-    if not config.Jobs[PlayerData.job.name] or config.Jobs[PlayerData.job.name]['interaction'] then return end
+    print("2")
+    if not config.Jobs[PlayerData.job.name] then return end
+    print("3")
     local multimenu = {}
     local firstmenu = {}
     local openmenu = false

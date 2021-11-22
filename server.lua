@@ -507,9 +507,14 @@ ESX.RegisterServerCallback('renzu_jobs:buyitem',function(source, cb, item, amoun
             end
         end
         value = value * tonumber(amount)
-        if found and tonumber(amount) > 0 and xPlayer.getMoney() >= tonumber(value) and Cancarry(xPlayer,item,tonumber(amount)) then
-            addMoney(tonumber(value),job,source,'money')
-            xPlayer.removeMoney(tonumber(value))
+        if found and tonumber(amount) > 0 and xPlayer.getMoney() >= tonumber(value) and Cancarry(xPlayer,item,tonumber(amount)) and config.Jobs[job]['shop'][shopindex].public
+        or not config.Jobs[job]['shop'][shopindex].public and found and tonumber(amount) > 0 and JobMoney(xPlayer.job.name).money >= tonumber(value) and Cancarry(xPlayer,item,tonumber(amount)) then
+            if not config.Jobs[job]['shop'][shopindex].public then
+                removeMoney(tonumber(value),xPlayer.job.name,source,'money')
+            else
+                addMoney(tonumber(value),job,source,'money')
+                xPlayer.removeMoney(tonumber(value))
+            end
             local label = nil
             if not string.find(item:upper(), "WEAPON_") then
                 label = ESX.GetItemLabel(item)
