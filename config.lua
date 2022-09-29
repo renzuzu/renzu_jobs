@@ -1,6 +1,6 @@
 config = {}
 -- MAIN CONFIG
-config.Mysql = 'mysql-async' -- "ghmattisql", "mysql-async"
+config.Mysql = 'mysql-async' -- "ghmattisql", "mysql-async", "oxmysql"
 config.esx = '1.2' -- 1.1 or 1.2 , 1.2 are v1final and esx legacy is compatible
 config.css = 'new' -- new or old -- new = 4 column, old 2 column
 config.logo = 'https://forum.cfx.re/uploads/default/original/4X/b/1/9/b196908c7e5dfcd60aa9dca0020119fa55e184cb.png' -- url of logo
