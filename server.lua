@@ -53,6 +53,12 @@ CreateThread(function()
     print("Renzu Jobs LOADED")
 end)
 
+-- Register this stash only when this event is called
+RegisterNetEvent('renzu_jobs:AddStash', function(job, type)
+    local xPlayer = ESX.GetPlayerFromId(source)
+	ox_inventory:RegisterStash(''..job..'_'..type..'', 'Stash', 70, 1000000, false)
+end)
+
 function JobMoney(job,paycheck)
     if paycheck and config.FreePaycheck[job] then return {money=99999999,black_money=99999999} end
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = job})

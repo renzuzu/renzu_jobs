@@ -46,7 +46,8 @@ local jobinvcache = {}
 function OpenInventory(job,type)
     local job = PlayerData.job.name
     if config.useOxInventory then
-        print("GAGO")
+        TriggerServerEvent('renzu_jobs:AddStash', job, type) -- temp logic
+        Citizen.Wait(1500)
         TriggerEvent('ox_inventory:openInventory', 'stash', {id = ''..job..'_'..type..'', name = ''..job..'_'..type..'', slots = 70, weight = 1000000, coords = GetEntityCoords(PlayerPedId())})
     else
         ESX.TriggerServerCallback('renzu_jobs:getPlayerInventory', function(inventory)
