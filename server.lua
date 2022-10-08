@@ -12,7 +12,7 @@ end)
 CreateThread(function()
     Wait(200)
     local registeredjobs = {}
-    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users', {})
+    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,name,firstname,lastname FROM users', {})
     jobsclass = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
     existing = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs', {})
     
@@ -321,7 +321,7 @@ function addMoneyOffline(identifier,amount)
 end
 
 lib.callback.register('renzu_jobs:playerlist', function (source)
-    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users', {})
+    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,name,firstname,lastname FROM users', {})
     local source = tonumber(source)
     local xPlayer = GetPlayerFromId(source)
     local jobs = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
@@ -623,7 +623,7 @@ lib.callback.register('renzu_jobs:setjob',function(source, grade, identifier)
                 notify = 'warning'
             end
             toPlayer.setJob(xPlayer.job.name, tonumber(grade))
-            playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users', {})
+            playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,name,firstname,lastname FROM users', {})
             Wait(100)
             TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You '..text..' '..toPlayer.name..' as a '..xPlayer.job.grade_label)
             TriggerClientEvent('renzu_notify:Notify',toPlayer.source,notify,'Job', 'You have been '..text..' by '..xPlayer.name..' to '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label)
@@ -645,7 +645,7 @@ lib.callback.register('renzu_jobs:setjob',function(source, grade, identifier)
                 end
             end
             UpdateJob(identifier, xPlayer.job.name, tonumber(grade))
-            playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users', {})
+            playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,name,firstname,lastname FROM users', {})
             Wait(100)
             
             if tonumber(jobgrade) > tonumber(grade) then
