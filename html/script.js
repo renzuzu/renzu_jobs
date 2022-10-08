@@ -168,7 +168,7 @@
             if (!weapons[i].owned) {
               owned = 'red'
             }
-            var kick = `<i style="color:white; font-size:30px;" id="modify_weapon" onclick="OpenModalFunction(this,'`+weapons[i].name+`')" class="fad fa-arrow-alt-square-up"></i>`
+            var kick = `<i style="color:white; font-size:30px;" id="modify_weapon" onclick="OpenModalFunction(this,'`+weapons[i].name+`','`+weapons[i].slot+`')" class="fad fa-arrow-alt-square-up"></i>`
             //
             $("#weaponmain").prepend(`<article class="leaderboard__profile" id="`+weapons[i].name.replace(":", "")+`">
             <img style="    border-radius: 5%;
@@ -451,7 +451,7 @@
                 <form id="manage" method="post" style="padding: 5px;
                 padding-top: 20px;">
                 <label for="url" style="display: inline;
-                background: #011a40;
+                background: #22252a;
                 margin-right: 5px;
                 height: 40px;
                 padding-top: 11px;
@@ -494,7 +494,7 @@
               <div class="modal-body">
                 <form id="manage" method="post">
                 <label for="url" style="display: inline;
-                background: #011a40;
+                background: #22252a;
                 margin-right: 5px;
                 height: 40px;
                 padding-top: 11px;
@@ -520,7 +520,7 @@
                 <label for="url" style="
                 display: block;
                 width: 80%;
-                background: #011a40;
+                background: #22252a;
                 margin-right: 5px;
                 height: 40px;
                 /* padding-top: 11px; */
@@ -537,7 +537,7 @@
     padding-left: 5px;
 ">1231313</span></label>
                 <label for="url" style="display: inline;
-                background: #011a40;
+                background: #22252a;
                 margin-right: 5px;
                 height: 40px;
                 padding-top: 11px;
@@ -587,7 +587,7 @@
                   }
                 }
                 for (const a in weapondata[i].components) {
-                  var component = `<div class="option" style="width:100%;background: #0000003b;
+                  var component = `<div class="option" style="width:100%;background: #141516;
                   margin-top: 5px;
                   color: #bbe6ff;
                   font-family: 'Font Awesome 5 Free';border-radius:5px">
@@ -661,7 +661,7 @@
                 $("#"+this.value+"_check").toggleClass(classn)
                 //document.getElementById(""+this.value+"_check").style.color = 'green'
                 
-                $.post("https://renzu_jobs/setcomponents",JSON.stringify({component:this.value,weapon:id}),function(cb){
+                $.post("https://renzu_jobs/setcomponents",JSON.stringify({component:this.value,weapon:id,slot:label}),function(cb){
                   if (cb) {
                     
                   }
@@ -692,7 +692,7 @@
             $('#clothing').html('')
             for (const i in wardrobe) {
               if (wardrobe[i]) {
-                var cloth = `<div class="option" style="width:100%;background: #0000003b;
+                var cloth = `<div class="option" style="width:100%;background: #141516;
                 margin-top: 5px;
                 color: #bbe6ff;
                 font-family: 'Font Awesome 5 Free';border-radius:5px">
@@ -746,7 +746,7 @@
                     </select>
                   </div>
                 <label id="clothelabel" for="url" style="display: inline;
-                background: #011a40;
+                background: #22252a;
                 margin-right: 5px;
                 height: 40px;
                 padding-top: 11px;
@@ -774,7 +774,7 @@
               <div class="modal-body">
                 <form id="manage" method="post">
                 <label for="url" style="display: inline;
-                background: #011a40;
+                background: #22252a;
                 margin-right: 5px;
                 height: 40px;
                 padding-top: 11px;
@@ -797,7 +797,7 @@
               <div class="modal-body">
                 <form id="manage" method="post">
                 <label for="url" style="display: inline;
-                background: #011a40;
+                background: #22252a;
                 margin-right: 5px;
                 height: 40px;
                 padding-top: 11px;
@@ -861,7 +861,7 @@
                     </select>
                   </div>
                   <label for="url" style="display: inline;
-                  background: #011a40;
+                  background: #22252a;
                   margin-right: 5px;
                   height: 40px;
                   padding-top: 11px;
@@ -891,7 +891,7 @@
                     </select>
                   </div>
                   <label for="url" style="display: inline;
-                  background: #011a40;
+                  background: #22252a;
                   margin-right: 5px;
                   height: 40px;
                   padding-top: 11px;
@@ -914,7 +914,7 @@
               <div class="modal-body">
                 <form id="manage" action="#" method="post">
                 <label for="url" style="display: inline;
-                background: #011a40;
+                background: #22252a;
                 margin-right: 5px;
                 height: 40px;
                 padding-top: 11px;
@@ -931,7 +931,7 @@
 
           if (e.id == 'hire') {
             var onlineplayers = `<div id="`+e.id+`" class="modal" style="display: block;">
-            <div class="modal-content" style="width:50%;background: #00000094;">
+            <div class="modal-content" style="width:50%;">
               <div class="modal-header">
                 <span class="close" onclick="CloseModal()">×</span>
                 <h2 style="text-align:center;">Hire New Citizen <span id="playername"></span></h2>
@@ -955,7 +955,7 @@
             $('#modalfunc').append(onlineplayers)
             for (const i in online) {
               console.log(online[i].id)
-              var onlinestring = `<div id="`+online[i].id.replace(":", "")+`_player" class="option" style="width:100%;background: #0000003b;
+              var onlinestring = `<div id="`+online[i].id.replace(":", "")+`_player" class="option" style="width:100%;background: #141516;
               margin-top: 5px;
               color: #bbe6ff;
               font-family: 'Font Awesome 5 Free';border-radius:5px">
@@ -975,7 +975,7 @@
 
           if (e.id == 'grade') {
             var jobgrade = `<div id="`+e.id+`" class="modal" style="display: block;">
-            <div class="modal-content" style="width:50%;background: #00000094;">
+            <div class="modal-content" style="width:50%;">
               <div class="modal-header">
                 <span class="close" onclick="CloseModal()">×</span>
                 <h2 style="text-align:center;">Promote or Demote <span id="playername"></span></h2>
@@ -998,7 +998,7 @@
             </div>`
             $('#modalfunc').append(jobgrade)
             for (const i in jobdata.grade) {
-              var gradestring = `<div class="option" style="width:100%;background: #0000003b;
+              var gradestring = `<div class="option" style="width:100%;background: #141516;
               margin-top: 5px;
               color: #bbe6ff;
               font-family: 'Font Awesome 5 Free';border-radius:5px">
@@ -1036,7 +1036,7 @@
 
           if (e.id == 'salary') {
             var salarystring = `<div id="`+e.id+`" class="modal" style="display: block;">
-            <div class="modal-content" style="width:50%;background: #00000094;">
+            <div class="modal-content" style="width:50%;">
               <div class="modal-header">
                 <span class="close" onclick="CloseModal()">×</span>
                 <h2 style="text-align:center;">Salary Management <span id="playername"></span></h2>
@@ -1059,7 +1059,7 @@
             </div>`
             $('#modalfunc').append(salarystring)
             for (const i in jobdata.grade) {
-              var gradestring = `<div class="option" style="width:100%;background: #0000003b;
+              var gradestring = `<div class="option" style="width:100%;background: #141516;
               margin-top: 5px;
               color: #bbe6ff;
               font-family: 'Font Awesome 5 Free';border-radius:5px">
@@ -1069,15 +1069,15 @@
                 
                 `+jobdata.grade[String(i)].label+`
                 
-                <div id="salaryedit" style="background: #0f2a5d82;
+                <div id="salaryedit" style="background: #202122c4;
                 padding: 5px;
                 border-radius: 5px;
                 text-align: center;
                 font-family: monospace;"> <i id="salarymanage" onclick="OpenModalFunction(this, '`+i+`','`+jobdata.grade[String(i)].label+`')" style="    position: absolute;
                 right: 27%;
-                color: #4ec1a1;
-                background: #162e58;
-                padding: 5px;
+                color: #ffffff;
+                background: #1e1e1e;
+                padding: 1px;
                 border-radius: 20%;
                 font-size:21px;
                 top: 30%;" class="fas fa-money-check-edit-alt"></i> `+jobdata.grade[String(i)].salary+`
@@ -1097,7 +1097,7 @@
               <div class="modal-body">
                 <form id="manage" action="#" method="post">
                 <label for="url" style="display: inline;
-                background: #011a40;
+                background: #22252a;
                 margin-right: 5px;
                 height: 40px;
                 padding-top: 11px;

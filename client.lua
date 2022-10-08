@@ -1,7 +1,7 @@
-ESX = nil
+ESX = exports['es_extended']:getSharedObject()
 local open = false
 local loaded = false
-PlayerData = nil
+PlayerData = {}
 inv_type = nil
 cancel = true
 clothingopen = false
@@ -11,25 +11,39 @@ local firstSpawn, zoomOffset, camOffset, heading, skinLoaded = true, 0.0, 0.0, 9
 local clothes = {}
 shopindex = 1
 Citizen.CreateThread(function()
-    Wait(100)
-	while ESX == nil do TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end) Citizen.Wait(0) end
-    while ESX.GetPlayerData().job == nil do Wait(0) end
-    ESX.PlayerData = ESX.GetPlayerData()
+    Wait(111)
+    local conf = lib.callback.await('renzu_jobs:getConfig', false)
+    config = conf
+    config.success = true
+    Wait(2000)
     PlayerData = ESX.GetPlayerData()
+    CreateJobThreads()
 end)
 
 RegisterNetEvent('esx:setJob')
 AddEventHandler('esx:setJob', function(job)
 	PlayerData.job = job
     TriggerServerEvent('renzu_jobs:updatejob',PlayerData)
+    if config.Oxlib then
+        CreateJobThreads()
+    end
     setjob = true
     Wait(2000)
     setjob = false
 end)
 
+RegisterNetEvent('esx:playerLoaded')
+AddEventHandler('esx:playerLoaded', function(xPlayer)
+    PlayerData = xPlayer
+    playerloaded = true
+    if config.Oxlib then
+        CreateJobThreads()
+    end
+end)
+
 local playercache = {}
 function OpenBossMenu()
-    ESX.TriggerServerCallback("renzu_jobs:playerlist",function(data,count,admin,myimage,myjob,jobmoney,jobdata,online)
+    lib.callback("renzu_jobs:playerlist", false, function(data,count,admin,myimage,myjob,jobmoney,jobdata,online)
         playercache = data
         SendNUIMessage({
             type = 'show',
@@ -46,11 +60,13 @@ local jobinvcache = {}
 function OpenInventory(job,type)
     local job = PlayerData.job.name
     if config.useOxInventory then
-        TriggerServerEvent('renzu_jobs:AddStash', job, type) -- temp logic
-        Citizen.Wait(1500)
-        TriggerEvent('ox_inventory:openInventory', 'stash', {id = ''..job..'_'..type..'', name = ''..job..'_'..type..'', slots = 70, weight = 1000000, coords = GetEntityCoords(PlayerPedId())})
+        local stash = lib.callback.await('renzu_jobs:AddStash', false, job, type)
+        if type == 'Personal' then
+            type = PlayerData.identifier
+        end
+        TriggerEvent('ox_inventory:openInventory', 'stash', {id = ''..job..'_'..type..'', name = ''..job..'_'..type..'', slots = 70, weight = 1000000, coords = GetEntityCoords(cache.ped)})
     else
-        ESX.TriggerServerCallback('renzu_jobs:getPlayerInventory', function(inventory)
+        lib.callback('renzu_jobs:getPlayerInventory', false, function(inventory)
             SendNUIMessage({
                 type = 'showinv',
                 content = {inventory = inventory.playerinventory, job_inventory = inventory.inventory, logo = config.logo, img = config.inventoryImageUrl}
@@ -67,28 +83,43 @@ end
 
 function OpenWeaponMenu()
     local configweapon = Config.Weapons
-    if Weapons[PlayerData.job.name] == nil then print("JOB IS NOT REGISTER TO weaponconfig.lua") end
+    --if Weapons[PlayerData.job.name] == nil then print("JOB IS NOT REGISTER TO weaponconfig.lua") end
     for k,v in pairs(configweapon) do
         if Weapons[PlayerData.job.name] ~= nil and Weapons[PlayerData.job.name][v.name] then
             v.mingrade = Weapons[PlayerData.job.name][v.name].mingrade
         end
     end
     local weapons = {}
-    ESX.TriggerServerCallback('renzu_jobs:getPlayerWeapons', function(weapon)
+    lib.callback('renzu_jobs:getPlayerWeapons', false, function(weapon)
         local weapon = weapon
         for k,v in pairs(configweapon) do
             v.owned = false
-            if PlayerData.job.grade >= v.mingrade then
-                for k,v2 in pairs(weapon) do
-                    if v2.name == v.name then
+            v.name = k
+            local components = {}
+            if PlayerData.job.grade and Weapons[PlayerData.job.name] and Weapons[PlayerData.job.name][k] and Weapons[PlayerData.job.name][k].mingrade <= PlayerData.job.grade then
+                for k2,v2 in pairs(weapon) do
+                    if v2.name == k then
                         v.owned = true
+                        v.slot = v2.slot
                         v.install_components = {}
-                        for k3,v3 in pairs(v2.components) do
-                            v.install_components[v3] = true
+                        for k3,v3 in pairs(Config.Components) do
+                            if v3.client then
+                                for k,v4 in pairs(v3.client.component) do
+                                    if DoesWeaponTakeWeaponComponent(GetHashKey(v.name), v4) then
+                                        v.install_components[v4] = true
+                                        if not components[k3] then
+                                            components[k3] = {}
+                                        end
+                                        components[k3].name = k3
+                                        components[k3].label = v3.label
+                                    end
+                                end
+                            end
                         end
                     end
                 end
-                weapons[v.name] = v
+                weapons[k] = v
+                weapons[k].components = components
             end
         end
         SendNUIMessage({
@@ -108,18 +139,17 @@ end)
 
 RegisterNetEvent('renzu_jobs:opengarage')
 AddEventHandler('renzu_jobs:opengarage', function(job)
-    if IsPedInAnyVehicle(PlayerPedId()) then
-        local vehicle = GetVehiclePedIsIn(PlayerPedId())
+    if IsPedInAnyVehicle(cache.ped) then
+        local vehicle = GetVehiclePedIsIn(cache.ped)
         local plate = GetVehicleNumberPlateText(vehicle)
         local prop = ESX.Game.GetVehicleProperties(vehicle)
-        ESX.TriggerServerCallback("renzu_jobs:storevehicle",function(a)
+        lib.callback("renzu_jobs:storevehicle", false, function(a)
             SetNuiFocus(false,false)
             SetNuiFocusKeepInput(false)
-            TaskLeaveVehicle(PlayerPedId(),GetVehiclePedIsIn(PlayerPedId()),1)
+            TaskLeaveVehicle(cache.ped,GetVehiclePedIsIn(cache.ped),1)
             Wait(2000)
             CheckWanderingVehicle(plate)
             cancel = true
-            cb(a)
         end,plate,prop)
     else
 	    OpenGarage()
@@ -128,7 +158,7 @@ end)
 
 function OpenGarage()
     local job = PlayerData.job.name
-    ESX.TriggerServerCallback("renzu_jobs:getvehicles",function(data,vehiclesdb)
+    lib.callback("renzu_jobs:getvehicles", false, function(data,vehiclesdb)
         local vehicles = {}
         for k,v in pairs(data) do
             local prop = json.decode(v.vehicle)
@@ -171,7 +201,7 @@ AddEventHandler('renzu_jobs:openvehicleshop', function()
 end)
 
 RegisterNUICallback('buyvehicle', function(data, cb)
-    ESX.TriggerServerCallback("renzu_jobs:buyvehicle",function(a)
+    lib.callback("renzu_jobs:buyvehicle", false, function(a)
         SetNuiFocus(false,false)
         SetNuiFocusKeepInput(false)
         close()
@@ -251,7 +281,7 @@ function ReqAndDelete(object, detach)
 end
 
 RegisterNUICallback('returnvehicle', function(data, cb)
-    ESX.TriggerServerCallback("renzu_jobs:returnvehicle",function(a)
+    lib.callback("renzu_jobs:returnvehicle", false, function(a)
         if a then
             SpawnVehicle(data)
             cb(a)
@@ -264,7 +294,7 @@ end)
 
 function SpawnVehicle(data)
     local job = PlayerData.job.name
-    ESX.TriggerServerCallback("renzu_jobs:takeoutvehicle",function(a)
+    lib.callback("renzu_jobs:takeoutvehicle", false, function(a)
         local coord = config.Jobs[job]['garage']['spawn']
         SetNuiFocus(false,false)
         SetNuiFocusKeepInput(false)
@@ -273,21 +303,11 @@ function SpawnVehicle(data)
         Wait(100)
         local hash = tonumber(props.model)
         local count = 0
-        if not HasModelLoaded(hash) then
-            RequestModel(hash)
-            while not HasModelLoaded(hash) and count < 1111 do
-                count = count + 10
-                Citizen.Wait(10)
-                if count > 1000 then
-                return
-                end
-            end
-        end
+        lib.requestModel(hash)
         v = CreateVehicle(hash,vector3(coord.x,coord.y,coord.z), coord.w, 1, 1)
         ESX.Game.SetVehicleProperties(v, data.prop)
         NetworkFadeInEntity(v,1)
-        TaskWarpPedIntoVehicle(PlayerPedId(), v, -1)
-        cb(a)
+        TaskWarpPedIntoVehicle(cache.ped, v, -1)
     end,data.plate)
 end
 
@@ -299,25 +319,27 @@ end)
 
 
 RegisterNetEvent('renzu_jobs:openshop')
-AddEventHandler('renzu_jobs:openshop', function(shop,job)
-	OpenShop(shop,job)
+AddEventHandler('renzu_jobs:openshop', function(shop,job,public,shopindex)
+	OpenShop(shop,job,public,shopindex)
 end)
 
 local currentshop = nil
-function OpenShop(shop,job)
-    local job = job
-    SendNUIMessage({
-        type = 'Shop',
-        content = {shop = config.Jobs[job]['shop'][shopindex]['items'] ,logo = config.logo, img = config.inventoryImageUrl}
-    })
-    currentshop = job
-    Wait(50)
-    SetNuiFocus(true,true)
-    SetNuiFocusKeepInput(false)
+function OpenShop(shop,job,public,shopindex)
+    if public and #(GetEntityCoords(cache.ped) - config.Jobs[job]['shop'][shopindex].coord) < 3 or not public and #(GetEntityCoords(cache.ped) - config.Jobs[job]['shop'][shopindex].coord) < 3 and job == PlayerData.job.name then
+        local job = job
+        SendNUIMessage({
+            type = 'Shop',
+            content = {shop = config.Jobs[job]['shop'][shopindex]['items'] ,logo = config.logo, img = config.inventoryImageUrl}
+        })
+        currentshop = job
+        Wait(50)
+        SetNuiFocus(true,true)
+        SetNuiFocusKeepInput(false)
+    end
 end
 
 RegisterNUICallback('buyitem', function(data, cb)
-    ESX.TriggerServerCallback("renzu_jobs:buyitem",function(a)
+    lib.callback("renzu_jobs:buyitem", false, function(a)
         if not a then
             close()
         end
@@ -360,30 +382,46 @@ RegisterNUICallback('refresh', function(data, cb)
 end)
 
 RegisterNUICallback('kick', function(data, cb)
-    ESX.TriggerServerCallback("renzu_jobs:kick",function(a)
+    lib.callback("renzu_jobs:kick", false, function(a)
         cb(a)
     end,data.id)
     cb(true)
 end)
 
 RegisterNUICallback('getweapon', function(data, cb)
-    ESX.TriggerServerCallback("renzu_jobs:getweapon",function(a)
+    lib.callback("renzu_jobs:getweapon", false, function(a)
         OpenWeaponMenu()
         cb(a)
     end,data.weapon)
 end)
 
 RegisterNUICallback('setcomponents', function(data, cb)
-    ESX.TriggerServerCallback("renzu_jobs:setweaponcomponents",function(a)
+    local weapon = GetSelectedPedWeapon(cache.ped)
+    print(weapon)
+    if weapon ~= GetHashKey(data.weapon) then
+        exports.ox_inventory:useSlot(tonumber(data.slot))
+        Wait(1000)
+    end
+    local componenthash = nil
+    local components = Config.Components[data.component] and Config.Components[data.component].client.component
+    for k,v4 in pairs(components) do
+        if DoesWeaponTakeWeaponComponent(GetHashKey(data.weapon), v4) then
+            componenthash = v4
+        end
+    end
+    local t = {hash = componenthash, name = data.component}
+    lib.callback("renzu_jobs:setweaponcomponents", false, function(a)
         --OpenWeaponMenu()
+        print(data.slot)
         cb(a)
-    end,data.weapon,data.component)
+    end,data.weapon,t,data.slot)
+    print(data.weapon,t,data.slot,data.component,componenthash, type(t))
 end)
 
 RegisterNUICallback('changesalary', function(data, cb)
     local grade = data.grade
     local amount = data.amount
-    ESX.TriggerServerCallback("renzu_jobs:changesalary",function(a)
+    lib.callback("renzu_jobs:changesalary", false, function(a)
         cb(a)
     end,grade,amount)
 end)
@@ -399,7 +437,7 @@ RegisterNUICallback('sendbonus', function(data, cb)
             amount = v.value
         end
     end
-    ESX.TriggerServerCallback("renzu_jobs:sendbonus",function(a)
+    lib.callback("renzu_jobs:sendbonus", false, function(a)
         cb(a)
     end,id,amount)
 end)
@@ -425,7 +463,7 @@ RegisterNUICallback('itemfunc', function(data, cb)
             end
         end
     end
-    ESX.TriggerServerCallback("renzu_jobs:itemfunc",function(a)
+    lib.callback("renzu_jobs:itemfunc", false, function(a)
         local job = PlayerData.job.name
         OpenInventory(job,inv_type)
         cb(a)
@@ -436,7 +474,7 @@ RegisterNUICallback('withdraw_deposit', function(data, cb)
     local type = data.type
     local amount = data.amount
     local money_type = data.money_type
-    ESX.TriggerServerCallback("renzu_jobs:withdraw_deposit",function(a)
+    lib.callback("renzu_jobs:withdraw_deposit", false, function(a)
         cb(a)
     end,type,amount,money_type)
 end)
@@ -462,7 +500,7 @@ AddEventHandler('renzu_jobs:openbossmenu', function()
 end)
 
 RegisterNUICallback('setjob', function(data, cb)
-    ESX.TriggerServerCallback("renzu_jobs:setjob",function(a)
+    lib.callback("renzu_jobs:setjob", false, function(a)
         cb(a)
     end,data.grade,data.id)
     close()
@@ -486,14 +524,16 @@ function OpenCrafting()
 end
 
 RegisterNUICallback('craftitem', function(data, cb)
-    ESX.TriggerServerCallback("renzu_jobs:craftitem",function(a)
+    lib.callback("renzu_jobs:craftitem", false, function(a)
         cb(a)
     end,data.item,data.amount,data.type)
 end)
 
 RegisterNetEvent('renzu_jobs:duty')
-AddEventHandler('renzu_jobs:duty', function(name,job)
-    OpenDuty(job)
+AddEventHandler('renzu_jobs:duty', function(name,job,offduty)
+    if job == PlayerData.job.name or PlayerData.job.name == offduty then
+        OpenDuty(job,offduty)
+    end
 end)
 
 RegisterNUICallback('duty', function(data, cb)
@@ -501,7 +541,7 @@ RegisterNUICallback('duty', function(data, cb)
     cb(true)
 end)
 
-function OpenDuty(job)
+function OpenDuty(job,offduty)
     SendNUIMessage({
         type = 'Duty',
         content = {duty = {job = PlayerData.job.name, off = config.Jobs[job]['duty'].offdutyname,jobname = job} ,logo = config.logo, img = config.inventoryImageUrl}
@@ -513,233 +553,82 @@ end
 
 local markers = {}
 
-function ShowFloatingHelpNotification(msg, coords)
-    AddTextEntry('FloatingHelpNotificationjobs', msg)
-    SetFloatingHelpTextWorldPosition(1, coords.x,coords.y,coords.z)
-    SetFloatingHelpTextStyle(1, 1, 2, -1, 3, 0)
-    BeginTextCommandDisplayHelp('FloatingHelpNotificationjobs')
-    EndTextCommandDisplayHelp(2, false, false, -1)
+OxlibTextUi = function(msg)
+	lib.showTextUI(msg, {
+		position = "left-center",
+		icon = 'car',
+		style = {
+			borderRadius = 5,
+			backgroundColor = '#212121',
+			color = 'white'
+		}
+	})
 end
 
-function DrawMarkerInput(vec,msg,event,server,name,job,d,nomarker)
-    local d = d
-    if d == nil then d = 3 end
-    if markers[name] == nil and not config.usePopui or markers[name] == nil and config.showmarker and config.usePopui then
-        markers[name] = true
-        CreateThread(function()
-            cancel = false
-            local ped = PlayerPedId()
-            local coord = GetEntityCoords(ped)
-            while #(vec - coord) <= d and not cancel and not setjob do
-                Citizen.Wait(5)
-                coord = GetEntityCoords(ped)
-                if config.showmarker and not nomarker then
-                    DrawMarker(22, vec.x,vec.y,vec.z ,0,0,0,0,0,0.5,0.5,0.5,0.5,255, 255, 220,200,0,0,0,1)
-                end
-                if not config.usePopui and #(vec - coord) < 1.5 then
-                    ShowFloatingHelpNotification("Press [E] "..msg,vec)
-                    if IsControlJustReleased(0,38) then
-                        if not server then
-                            TriggerEvent(event,name,job)
-                        else
-                            TriggerServerEvent(event,name,job)
-                        end
-                        Wait(100)
-                        while #(vec - coord) < d and not cancel and not setjob do coord = GetEntityCoords(ped) Wait(100) end
-                        markers[name] = nil
-                        break
-                    end
-                end
-            end
-            Wait(500)
-            markers[name] = nil
-            return
-        end)
+JobZone = {}
+JobZone.Spheres = {}
+JobZone.__index = {}
+JobZone.Add = function(coord,msg,event,server,var,job)
+	if not config.Oxlib then return end
+	function onEnter(self)
+		CreateThread(function() -- create thread to suport multi zones
+			local self = self
+			local msg = msg
+            OxlibTextUi("Press [E] "..msg)
+		end)
     end
+    
+    function onExit(self)
+        lib.hideTextUI()
+    end
+
+    function inside()
+        if IsControlJustReleased(0,38) then
+            if server then
+                TriggerServerEvent(event,table.unpack(var))
+            else
+                TriggerEvent(event,table.unpack(var))
+            end
+        end
+    end
+
+    local sphere = lib.zones.sphere({ coords = coord, radius = dist or 2, debug = false, inside = inside, onEnter = onEnter, onExit = onExit })
+    table.insert(JobZone.Spheres,sphere)
 end
 
 -- PUBLIC SHOPS && DUTY
 local currentwash = nil
 Citizen.CreateThread(function()
     Wait(2000)
-    while PlayerData == nil do Wait(10) end
-	while true do
-        local job = PlayerData.job.name
-        local coord = GetEntityCoords(PlayerPedId())
-        for k2,shop in pairs(config.Jobs) do
-            if shop['public_inventory'] then
-                for k,v in pairs(shop['public_inventory']) do
-                    local k = k
-                    if #(GetEntityCoords(PlayerPedId()) - v.coord) < 3 then
-                        DrawMarkerInput(v.coord,v.label,v.event,false,k,k2,3,true)
-                        if config.usePopui then
-                            local dist = #(coord - v.coord)
-                            if dist < 3 then
-                                local table = {
-                                    ['key'] = 'E', -- key
-                                    ['event'] = 'renzu_jobs:openinventory',
-                                    ['title'] = 'Press [E] Open '..v.label,
-                                    ['server_event'] = false, -- server event or client
-                                    ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                                    ['fa'] = '<i class="fal fa-store"></i>',
-                                    ['custom_arg'] = {k,k2}, -- example: {1,2,3,4}
-                                }
-                                TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                                cancel = false
-                                while dist < 3 and not cancel do
-                                    coord = GetEntityCoords(PlayerPedId())
-                                    dist = #(coord - v.coord)
-                                    Wait(500)
-                                end
-                                TriggerEvent('renzu_popui:closeui')
-                            end
-                        end
-                    end
+    while PlayerData.job == nil do Wait(10) end
+    if config.Oxlib then
+        for k2,data in pairs(config.Jobs) do
+            if data['public_inventory'] then
+                for k,v in pairs(data['public_inventory']) do
+                    JobZone.Add(v.coord,v.label,v.event,false,{k,k2})
                 end
             end
-            if shop['shop'] then
-                for k,v in ipairs(shop['shop']) do
-                    local k = tonumber(k)
-                    if v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 3 or not v.public and #(GetEntityCoords(PlayerPedId()) - v.coord) < 3 and job == k2 then
-                        shopindex = k
-                        DrawMarkerInput(v.coord,v.label,v.event,false,'shop',k2)
-                        if config.usePopui then
-                            local dist = #(coord - v.coord)
-                            if dist < 3 then
-                                local table = {
-                                    ['key'] = 'E', -- key
-                                    ['event'] = 'renzu_jobs:openshop',
-                                    ['title'] = 'Press [E] Open '..v.label,
-                                    ['server_event'] = false, -- server event or client
-                                    ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                                    ['fa'] = '<i class="fal fa-store"></i>',
-                                    ['custom_arg'] = {'shop',k2}, -- example: {1,2,3,4}
-                                }
-                                TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                                cancel = false
-                                while dist < 3 and not cancel do
-                                    coord = GetEntityCoords(PlayerPedId())
-                                    dist = #(coord - v.coord)
-                                    Wait(500)
-                                end
-                                TriggerEvent('renzu_popui:closeui')
-                            end
-                        end
-                    end
+            if data['shop'] then
+                for k,v in ipairs(data['shop']) do
+                    JobZone.Add(v.coord,v.label,v.event,false,{'shop',k2,v.public,k})
                 end
             end
-            local v = shop
-            if v['duty'] and #(GetEntityCoords(PlayerPedId()) - v['duty'].coord) < 3 and job == k2 or v['duty'] and #(GetEntityCoords(PlayerPedId()) - v['duty'].coord) < 3 and job == v['duty'].offdutyname then
-                DrawMarkerInput(v['duty'].coord,v['duty'].label,v['duty'].event,false,'duty',k2)
-                if config.usePopui then
-                    local dist = #(coord - v['duty'].coord)
-                    if dist < 3 then
-                        local table = {
-                            ['key'] = 'E', -- key
-                            ['event'] = 'renzu_jobs:duty',
-                            ['title'] = 'Press [E] Open '..v['duty'].label,
-                            ['server_event'] = false, -- server event or client
-                            ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                            ['fa'] = '<i class="fal fa-medal"></i>',
-                            ['custom_arg'] = {'shop',k2}, -- example: {1,2,3,4}
-                        }
-                        TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                        cancel = false
-                        while dist < 3 and not cancel do
-                            coord = GetEntityCoords(PlayerPedId())
-                            dist = #(coord - v['duty'].coord)
-                            Wait(500)
-                        end
-                        TriggerEvent('renzu_popui:closeui')
-                    end
+            if data['duty'] then
+                JobZone.Add(data['duty'].coord,data['duty'].label,data['duty'].event,false,{'duty',k2,data['duty'].offdutyname})
+            end
+            for k,v in pairs(config.moneywashcoord) do
+                local ent = config.moneywashcoord['entrance']
+                local ex = config.moneywashcoord['exit']
+                if k == 'entrance' then
+                    JobZone.Add(ent,'Enter Washroom','renzu_jobs:washroom',false,{'exit'})
+                elseif k == 'exit' then
+                    JobZone.Add(ex,'Enter Washroom','renzu_jobs:washroom',false,{'entrance'})
                 end
+            end
+            for k,v in pairs(config.MoneyWash) do
+                JobZone.Add(vector3(v.coord.x,v.coord.y,v.coord.z),'Wash Money','renzu_jobs:moneywash',false,{k})
             end
         end
-        
-        for k,v in pairs(config.moneywashcoord) do
-            local ent = config.moneywashcoord['entrance']
-            local ex = config.moneywashcoord['exit']
-            if k == 'entrance' and #(GetEntityCoords(PlayerPedId()) - ent) < 1.2 then
-                DrawMarkerInput(ent,'to Enter','renzu_jobs:washroom',false,'exit',k,1.2)
-                if config.usePopui then
-                    local dist = #(coord - ent)
-                    if dist < 1.2 then
-                        local table = {
-                            ['key'] = 'E', -- key
-                            ['event'] = 'renzu_jobs:washroom',
-                            ['title'] = 'Press [E] to Enter',
-                            ['server_event'] = false, -- server event or client
-                            ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                            ['fa'] = '<i class="fal fa-medal"></i>',
-                            ['custom_arg'] = {'exit'}, -- example: {1,2,3,4}
-                        }
-                        TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                        cancel = false
-                        while dist < 3 and not cancel do
-                            coord = GetEntityCoords(PlayerPedId())
-                            dist = #(coord - v['duty'].coord)
-                            Wait(500)
-                        end
-                        TriggerEvent('renzu_popui:closeui')
-                    end
-                end
-            end
-            if k == 'exit' and #(GetEntityCoords(PlayerPedId()) - ex) < 1.2 then
-                DrawMarkerInput(ex,'to Enter','renzu_jobs:washroom',false,'entrance',k,1.2)
-                if config.usePopui then
-                    local dist = #(coord - ex)
-                    if dist < 1.2 then
-                        local table = {
-                            ['key'] = 'E', -- key
-                            ['event'] = 'renzu_jobs:washroom',
-                            ['title'] = 'Press [E] to Enter',
-                            ['server_event'] = false, -- server event or client
-                            ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                            ['fa'] = '<i class="fal fa-medal"></i>',
-                            ['custom_arg'] = {'entrance'}, -- example: {1,2,3,4}
-                        }
-                        TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                        cancel = false
-                        while dist < 3 and not cancel do
-                            coord = GetEntityCoords(PlayerPedId())
-                            dist = #(coord - v['duty'].coord)
-                            Wait(500)
-                        end
-                        TriggerEvent('renzu_popui:closeui')
-                    end
-                end
-            end
-        end
-
-        for k,v in pairs(config.MoneyWash) do
-            if#(GetEntityCoords(PlayerPedId()) - vector3(v.coord.x,v.coord.y,v.coord.z)) < 1.2 and not v.inuse then
-                currentwash = k
-                DrawMarkerInput(vector3(v.coord.x,v.coord.y,v.coord.z),'Wash Money','renzu_jobs:moneywash',false,'wash',k,1.2)
-                if config.usePopui then
-                    local dist = #(coord - vector3(v.coord.x,v.coord.y,v.coord.z))
-                    if dist < 1.2 then
-                        local table = {
-                            ['key'] = 'E', -- key
-                            ['event'] = 'renzu_jobs:moneywash',
-                            ['title'] = 'Press [E] Wash Money',
-                            ['server_event'] = false, -- server event or client
-                            ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                            ['fa'] = '<i class="fal fa-medal"></i>',
-                            ['custom_arg'] = {'wash',k}, -- example: {1,2,3,4}
-                        }
-                        TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                        cancel = false
-                        while dist < 3 and not cancel do
-                            coord = GetEntityCoords(PlayerPedId())
-                            dist = #(coord - v['duty'].coord)
-                            Wait(500)
-                        end
-                        TriggerEvent('renzu_popui:closeui')
-                    end
-                end
-            end
-        end
-        Wait(1000)
     end
 end)
 
@@ -748,25 +637,28 @@ AddEventHandler('renzu_jobs:washroom', function(string)
 	DoScreenFadeOut(500)
     print(string,'gago')
     Wait(1000)
-    SetEntityCoords(PlayerPedId(),config.moneywashcoord[string])
+    SetEntityCoords(cache.ped,config.moneywashcoord[string])
     Wait(500)
-    while not HasCollisionLoadedAroundEntity(PlayerPedId()) do Wait(0) end
+    while not HasCollisionLoadedAroundEntity(cache.ped) do Wait(0) end
     DoScreenFadeIn(500)
 end)
 
 RegisterNetEvent('renzu_jobs:moneywash')
-AddEventHandler('renzu_jobs:moneywash', function()
-	ESX.TriggerServerCallback("renzu_jobs:getBlackMoney",function(blackmoney)
-        SendNUIMessage({
-            type = 'Wash',
-            content = {wash = blackmoney}
-        })
-        SetNuiFocus(true,true)
-    end)
+AddEventHandler('renzu_jobs:moneywash', function(id)
+    currentwash = id
+    if not config.MoneyWash[id].inuse then
+        lib.callback("renzu_jobs:getBlackMoney", false, function(blackmoney)
+            SendNUIMessage({
+                type = 'Wash',
+                content = {wash = blackmoney}
+            })
+            SetNuiFocus(true,true)
+        end)
+    end
 end)
 
 RegisterNUICallback('moneywash', function(data, cb)
-    ESX.TriggerServerCallback("renzu_jobs:washmoney",function(a)
+    lib.callback("renzu_jobs:washmoney", false, function(a)
         if a == true then
             TriggerEvent('renzu_notify:Notify', 'info','Customs', 'Money is being Washed')
             SetNuiFocus(false,false)
@@ -798,223 +690,33 @@ AddEventHandler('renzu_jobs:washuse', function(id, bool)
 end)
 
 -- JOB INTERACTIONS
-Citizen.CreateThread(function()
-    Wait(1000)
-    while PlayerData == nil do Wait(10) end
-	while true do
-		Citizen.Wait(1000)
-        local job = PlayerData.job.name
-        local grade = PlayerData.job.grade
-        local jobtable = config.Jobs[job]
-        local coord = GetEntityCoords(PlayerPedId())
-        local invehicle = IsPedInAnyVehicle(PlayerPedId())
-        if jobtable ~= nil then
-            for k,v in pairs(jobtable) do
-                --print(k ~= 'max_salary' , not invehicle , jobtable[k] ~= nil , jobtable[k].coord ~= nil , jobtable[k].coord , coord , grade , jobtable[k].grade)
-                if k ~= 'public_inventory' and k ~= 'max_salary' and not invehicle and jobtable[k] ~= nil and jobtable[k].coord ~= nil and #(jobtable[k].coord - coord) < 3 and grade >= jobtable[k].grade then
-                    DrawMarkerInput(jobtable[k].coord,jobtable[k].label,jobtable[k].event,false,k)
-                elseif k ~= 'public_inventory' and k == 'garage' and invehicle and jobtable[k] ~= nil and jobtable[k].spawn ~= nil and #(vector3(jobtable[k].spawn.x,jobtable[k].spawn.y,jobtable[k].spawn.z) - coord) < 3 and grade >= jobtable[k].grade then
-                    DrawMarkerInput(vector3(jobtable[k].spawn.x,jobtable[k].spawn.y,jobtable[k].spawn.z),jobtable[k].label,jobtable[k].event,false,k)
-                end
-            end
-            for k,v in pairs(jobtable['inventory']) do
-                if k ~= 'max_salary' and v ~= nil and v.coord ~= nil and #(v.coord - coord) < 3 and grade >= v.grade then
-                    DrawMarkerInput(v.coord,v.label,v.event,false,k,3,3,true)
-                end
-            end
-            local boss_dist = #(coord - jobtable['bossmenu'].coord) -- boss menus
-            --local inv = #(coord - jobtable['inventory'])
-            if boss_dist < 3 and grade >= jobtable['bossmenu'].grade and config.usePopui then
-                local table = {
-                    ['key'] = 'E', -- key
-                    ['event'] = 'renzu_jobs:openbossmenu',
-                    ['title'] = 'Press [E] Open '..jobtable['bossmenu'].label,
-                    ['server_event'] = false, -- server event or client
-                    ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                    ['fa'] = '<i class="fas fa-archive"></i>',
-                    ['custom_arg'] = {}, -- example: {1,2,3,4}
-                }
-                TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                cancel = false
-                while boss_dist < 3 and not cancel do
-                    coord = GetEntityCoords(PlayerPedId())
-                    boss_dist = #(coord - jobtable['bossmenu'].coord)
-                    Wait(500)
-                end
-                TriggerEvent('renzu_popui:closeui')
-            end
-            if jobtable['inventory'] and config.usePopui then
-                for k,v in pairs(jobtable['inventory']) do -- inventario
-                    if grade ~= nil and grade >= v.grade then
-                        local dist = #(coord - v.coord)
-                        if dist < 3 then
-                            local table = {
-                                ['key'] = 'E', -- key
-                                ['event'] = 'renzu_jobs:openinventory',
-                                ['title'] = 'Press [E] Open '..v.label,
-                                ['server_event'] = false, -- server event or client
-                                ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                                ['fa'] = '<i class="fas fa-archive"></i>',
-                                ['custom_arg'] = {k}, -- example: {1,2,3,4}
-                            }
-                            TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                            cancel = false
-                            while dist < 3 and not cancel do
-                                coord = GetEntityCoords(PlayerPedId())
-                                dist = #(coord - v.coord)
-                                Wait(500)
-                            end
-                            TriggerEvent('renzu_popui:closeui')
-                        end
-                    end
-                end
-            end
 
-            if jobtable['weapon_armory'] and config.usePopui  then
-                for k,v in pairs(jobtable['weapon_armory']) do -- weapon armory
-                    if grade ~= nil and grade >= jobtable['weapon_armory']['grade'] then
-                        local dist = #(coord - jobtable['weapon_armory']['coord'])
-                        if dist < 3 then
-                            local table = {
-                                ['key'] = 'E', -- key
-                                ['event'] = 'renzu_jobs:openweapons',
-                                ['title'] = 'Press [E] Open '..jobtable['weapon_armory']['label'],
-                                ['server_event'] = false, -- server event or client
-                                ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                                ['fa'] = '<i class="fal fa-swords"></i>',
-                                ['custom_arg'] = {k}, -- example: {1,2,3,4}
-                            }
-                            TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                            cancel = false
-                            while dist < 3 and not cancel do
-                                coord = GetEntityCoords(PlayerPedId())
-                                dist = #(coord - jobtable['weapon_armory']['coord'])
-                                Wait(500)
-                            end
-                            TriggerEvent('renzu_popui:closeui')
-                        end
-                    end
-                end
-            end
-
-            if jobtable['wardrobe'] and config.usePopui then
-                for k,v in pairs(jobtable['wardrobe']) do -- wardrobe
-                    if grade ~= nil and grade >= jobtable['wardrobe']['grade'] then
-                        local dist = #(coord - jobtable['wardrobe'].coord)
-                        if dist < 3 then
-                            local table = {
-                                ['key'] = 'E', -- key
-                                ['event'] = 'renzu_jobs:openwardrobe',
-                                ['title'] = 'Press [E] Open '..jobtable['wardrobe'].label,
-                                ['server_event'] = false, -- server event or client
-                                ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                                ['fa'] = '<i class="fal fa-tshirt"></i>',
-                                ['custom_arg'] = {k}, -- example: {1,2,3,4}
-                            }
-                            TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                            cancel = false
-                            while dist < 3 and not cancel do
-                                coord = GetEntityCoords(PlayerPedId())
-                                dist = #(coord - jobtable['wardrobe'].coord)
-                                Wait(500)
-                            end
-                            TriggerEvent('renzu_popui:closeui')
-                        end
-                    end
-                end
-            end
-
-            if jobtable['garage'] and config.usePopui then
-                for k,v in pairs(jobtable['garage']) do -- shop
-                    if grade ~= nil and grade >= jobtable['garage']['grade'] then
-                        local dist = #(coord - jobtable['garage'].coord)
-                        if IsPedInAnyVehicle(PlayerPedId()) then
-                            dist = #(coord - vector3(jobtable['garage'].spawn.x,jobtable['garage'].spawn.y,jobtable['garage'].spawn.z))
-                        end
-                        if dist < 3 then
-                            local table = {
-                                ['key'] = 'E', -- key
-                                ['event'] = 'renzu_jobs:opengarage',
-                                ['title'] = 'Press [E] Open '..jobtable['garage'].label,
-                                ['server_event'] = false, -- server event or client
-                                ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                                ['invehicle_title'] = '[E] Store Vehicle', -- title to show instead of the ['title']
-                                ['fa'] = '<i class="fal fa-garage"></i>',
-                                ['custom_arg'] = {k}, -- example: {1,2,3,4}
-                            }
-                            TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                            cancel = false
-                            while dist < 3 and not cancel do
-                                coord = GetEntityCoords(PlayerPedId())
-                                dist = #(coord - jobtable['garage'].coord)
-                                if IsPedInAnyVehicle(PlayerPedId()) then
-                                    dist = #(coord - vector3(jobtable['garage'].spawn.x,jobtable['garage'].spawn.y,jobtable['garage'].spawn.z))
-                                end
-                                Wait(500)
-                            end
-                            TriggerEvent('renzu_popui:closeui')
-                        end
-                    end
-                end
-            end
-
-            if jobtable['vehicleshop'] and config.usePopui then
-                for k,v in pairs(jobtable['vehicleshop']) do -- shop
-                    if grade ~= nil and grade >= jobtable['vehicleshop']['grade'] then
-                        local dist = #(coord - jobtable['vehicleshop'].coord)
-                        if dist < 3 then
-                            local table = {
-                                ['key'] = 'E', -- key
-                                ['event'] = 'renzu_jobs:openvehicleshop',
-                                ['title'] = 'Press [E] Open '..jobtable['vehicleshop'].label,
-                                ['server_event'] = false, -- server event or client
-                                ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                                ['invehicle_title'] = '[E] Store Vehicle', -- title to show instead of the ['title']
-                                ['fa'] = '<i class="fal fa-car"></i>',
-                                ['custom_arg'] = {k}, -- example: {1,2,3,4}
-                            }
-                            TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                            cancel = false
-                            while dist < 3 and not cancel do
-                                coord = GetEntityCoords(PlayerPedId())
-                                dist = #(coord - jobtable['vehicleshop'].coord)
-                                Wait(500)
-                            end
-                            TriggerEvent('renzu_popui:closeui')
-                        end
-                    end
-                end
-            end
-
-            if jobtable['crafting'] and config.usePopui then
-                for k,v in pairs(jobtable['crafting']) do -- shop
-                    if grade ~= nil and grade >= jobtable['crafting']['grade'] then
-                        local dist = #(coord - jobtable['crafting'].coord)
-                        if dist < 3 then
-                            local table = {
-                                ['key'] = 'E', -- key
-                                ['event'] = 'renzu_jobs:opencrafting',
-                                ['title'] = 'Press [E] Open '..jobtable['crafting'].label,
-                                ['server_event'] = false, -- server event or client
-                                ['unpack_arg'] = true, -- send args as unpack 1,2,3,4 order
-                                ['fa'] = '<i class="fal fa-tools"></i>',
-                                ['custom_arg'] = {k}, -- example: {1,2,3,4}
-                            }
-                            TriggerEvent('renzu_popui:drawtextuiwithinput',table)
-                            cancel = false
-                            while dist < 3 and not cancel do
-                                coord = GetEntityCoords(PlayerPedId())
-                                dist = #(coord - jobtable['crafting'].coord)
-                                Wait(500)
-                            end
-                            TriggerEvent('renzu_popui:closeui')
-                        end
-                    end
-                end
+CreateJobThreads = function()
+    if PlayerData.job == nil then return end
+    for k,v in pairs(JobZone.Spheres) do
+        v:remove()
+    end
+    local job = PlayerData.job.name
+    local grade = PlayerData.job.grade
+    local jobtable = config.Jobs[job]
+    local coord = GetEntityCoords(cache.ped)
+    local invehicle = IsPedInAnyVehicle(cache.ped)
+    if jobtable ~= nil then
+        for k,v in pairs(jobtable) do
+            --print(k ~= 'max_salary' , not invehicle , jobtable[k] ~= nil , jobtable[k].coord ~= nil , jobtable[k].coord , coord , grade , jobtable[k].grade)
+            if k ~= 'public_inventory' and k ~= 'max_salary' and not invehicle and jobtable[k] ~= nil and jobtable[k].coord ~= nil and grade >= jobtable[k].grade then
+                JobZone.Add(jobtable[k].coord,jobtable[k].label,jobtable[k].event,false,{k})
+            elseif k ~= 'public_inventory' and k == 'garage' and invehicle and jobtable[k] ~= nil and jobtable[k].spawn ~= nil and grade >= jobtable[k].grade then
+                JobZone.Add(vector3(jobtable[k].spawn.x,jobtable[k].spawn.y,jobtable[k].spawn.z),jobtable[k].label,jobtable[k].event,false,{k})
             end
         end
-	end
-end)
+        for k,v in pairs(jobtable['inventory']) do
+            if k ~= 'max_salary' and v ~= nil and v.coord ~= nil and grade >= v.grade then
+                JobZone.Add(v.coord,v.label,v.event,false,{k})
+            end
+        end
+    end
+end
 
 RegisterNetEvent('renzu_jobs:openwardrobe')
 AddEventHandler('renzu_jobs:openwardrobe', function(job)
@@ -1040,10 +742,10 @@ local maxcolor = {}
 local variantcache = {}
 function OpenClotheMenu(submitCb, cancelCb, restrict) -- Credits: basecode esx_skin
     clothingopen = true
-    local playerPed = PlayerPedId()
+    local playerPed = cache.ped
     confirm = false
     TriggerEvent('skinchanger:getSkin', function(skin) lastSkin = skin end)
-    ESX.TriggerServerCallback("renzu_jobs:getPlayerWardrobe",function(data)
+    lib.callback("renzu_jobs:getPlayerWardrobe", false, function(data)
         TriggerEvent('skinchanger:getData', function(components, maxVals)
             local elements = {}
             local _components = {}
@@ -1140,7 +842,7 @@ RegisterNUICallback('saveclothes', function(data, cb)
     local currentskin = {}
     TriggerEvent('skinchanger:getSkin', function(getSkin) currentskin = getSkin end)
     Wait(500)
-    ESX.TriggerServerCallback("renzu_jobs:saveclothes",function(a)
+    lib.callback("renzu_jobs:saveclothes", false, function(a)
         confirm = a
         cb(a)
     end,clothename,currentskin)
@@ -1151,7 +853,7 @@ RegisterNUICallback('selectclothes', function(data, cb)
     if clothes[data.name] ~= nil then
         confirm = true
         TriggerEvent('skinchanger:loadSkin', clothes[data.name])
-        ESX.TriggerServerCallback("renzu_jobs:selectclothe",function(a)
+        lib.callback("renzu_jobs:selectclothe", false, function(a)
         end,clothes[data.name])
         cb(true)
     end
@@ -1162,7 +864,7 @@ function CreateSkinCam()
         cam = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
     end
 
-    local playerPed = PlayerPedId()
+    local playerPed = cache.ped
 
     SetCamActive(cam, true)
     RenderScriptCams(true, true, 500, true, true)
@@ -1205,7 +907,7 @@ function CreateSkinCam()
             Citizen.Wait(100)
     
             if isCameraActive then
-                local playerPed = PlayerPedId()
+                local playerPed = cache.ped
                 local coords    = GetEntityCoords(playerPed)
     
                 local angle = heading * math.pi / 180.0
@@ -1337,95 +1039,87 @@ function GetVehicleClassnamemodel(vehicle)
     return classlist(class)
 end
 
-function OpenInteraction_Menu_default()
-	local elements = {}
-    local menus = {}
-    for k,v in pairs(config.Jobs[PlayerData.job.name]['interaction']) do
-        for index,t in pairs(v) do
-            local interaction = config[t.type][t.index].label
-            if menus[k] == nil then menus[k] = {} end
-            table.insert(menus[k], {
-                label      = interaction,
-                server      = config[t.type][t.index].server or false,
-                value      = config[t.type][t.index].name,
-                args      = config[t.type][t.index].args or {},
-            })
-            print(interaction)
-        end
-        table.insert(elements, {
-            label      = k,
-            value      = menus[k],
-        })
-	end
-
-	ESX.UI.Menu.CloseAll()
-
-	ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'shop', {
-		title    = 'Job Menu',
-		align    = 'bottom-right',
-		elements = elements
-	}, function(data, menu)
-		ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'shop_confirm', {
-			title    = 'Confirm',
-			align    = 'bottom-right',
-			elements = data.current.value
-        }, function(data2, menu2)
-			if data2.current.server == 'yes' then
-                print("server")
-				TriggerServerEvent(data2.current.value, data2.current.args)
-            else
-                print("client")
-                TriggerEvent(data2.current.value, data2.current.args)
-			end
-            ESX.UI.Menu.CloseAll()
-
-			menu2.close()
-		end, function(data2, menu2)
-			menu2.close()
-		end)
-	end, function(data, menu)
-		menu.close()
-	end)
-end
-
-function OpenInteraction()
-    print("1")
-    if config.esx_menu then OpenInteraction_Menu_default() return end
-    print("2")
-    if not config.Jobs[PlayerData.job.name] then return end
-    print("3")
-    local multimenu = {}
+function OxMenuInteraction()
     local firstmenu = {}
-    local openmenu = false
-    for k,v in pairs(config.Jobs[PlayerData.job.name]['interaction']) do
-        for index,t in pairs(v) do
-            if multimenu[k] == nil then multimenu[k] = {} end
-            local interaction = config[t.type][t.index].label
-            print(k,interaction,config[t.type][t.index].name)
-            multimenu[k][interaction] = {
-                ['title'] = interaction,
-                ['fa'] = '<i class="fad fa-question-square"></i>',
-                ['type'] = 'event', -- event / export
-                ['content'] = config[t.type][t.index].name,
-                ['variables'] = {server = false, send_entity = false, onclickcloseui = true, custom_arg = {}, arg_unpack = true},
-            }
-            openmenu = true
+    local tablenum = {}
+    if config.Jobs[PlayerData.job.name] and config.Jobs[PlayerData.job.name]['interaction'] then
+        for k2,v in pairs(config.Jobs[PlayerData.job.name]['interaction']) do
+            for k,v in pairs(v) do
+                if not tablenum[k2] then
+                    tablenum[k2] = 0
+                end
+                tablenum[k2] = tablenum[k2] + 1
+            end
         end
     end
-    if openmenu then
-        TriggerEvent('renzu_contextmenu:close')
-		Wait(200)
-        TriggerEvent('renzu_contextmenu:insertmulti',multimenu,"Interaction",false,"<i class='fad fa-eye'></i> Interaction")
-        TriggerEvent('renzu_contextmenu:show')
-    else
-        TriggerEvent('renzu_notify:Notify', 'error','Customs', 'Inventory is Empty')
-    end
+    --if c > 0 then
+        for title,data in pairs(config.Jobs[PlayerData.job.name]['interaction']) do
+            local hasmenu = false
+            local menus = {}
+            if tablenum[title] and tablenum[title] > 0 then
+                table.insert(firstmenu,{label = title, description = 'Enter to See All Interactions', args = {event = 'gago', server = false, val = title, }, icon = title == 'Citizen Interaction' and 'people-arrows' or 'car'})
+                for k,v in pairs(data) do
+                    local title = config[v.type][v.index].label
+                    local event = config[v.type][v.index].name
+                    local icon = config[v.type][v.index].icons
+                    print(icon)
+                    hasmenu = true
+                    table.insert(menus,{label = title, description = config[v.type][v.index].description, args = {event = event, server = false, val = 'ulol'},  icon = icon})
+                end
+            end
+            if hasmenu then
+                lib.registerMenu({
+                    id = title,
+                    title = title,
+                    position = 'top-right',
+                    disableInput = false,
+                    onSideScroll = function(selected, scrollIndex, args)
+                        print(selected, scrollIndex, args)
+                    end,
+                    onSelected = function(selected, scrollIndex, args)
+                        print(selected, scrollIndex, args,2)
+                    end,
+                    onClose = function()
+                        print('Menu closed')
+                        lib.showMenu('some_menu_id')
+                    end,
+                    options = menus
+                }, function(selected, scrollIndex, args)
+                    TriggerEvent(args.event,args.val)
+                    print(selected, scrollIndex, args,'entered')
+                end)
+            end
+        end
+        if firstmenu[1] then
+            lib.registerMenu({
+                id = 'oxmenu',
+                title = 'Interactions',
+            position = 'top-right',
+            disableInput = false,
+                onSideScroll = function(selected, scrollIndex, args)
+                    print(selected, scrollIndex, args)
+                end,
+                onSelected = function(selected, scrollIndex, args)
+                    print(selected, scrollIndex, args,2)
+                end,
+                onClose = function()
+                    print('Menu closed')
+                end,
+                options = firstmenu
+            }, function(selected, scrollIndex, args)
+                --TriggerEvent(args.event,args.val)
+                lib.showMenu(args.val)
+                print(selected, scrollIndex, args,'entered')
+            end)
+            lib.showMenu('oxmenu')
+        end
+    --end
 end
 
-CreateThread(function()
-	RegisterKeyMapping(config.commands, 'Interaction Menu', 'keyboard', config.keybinds)
+Citizen.CreateThread(function()
+    while not config.success do Wait(1) end
+    RegisterKeyMapping(config.commands, 'Interaction Menu', 'keyboard', config.keybinds)
     RegisterCommand(config.commands, function(source, args, rawCommand)
-        OpenInteraction()
+        OxMenuInteraction()
     end)
-    return
 end)

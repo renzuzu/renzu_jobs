@@ -17,7 +17,7 @@ article {
   /* --start: 20%;
   height: 130px; */
   --start: 25%;
-    height: 100px;
+  height: 100px;
   /* background-image: repeating-radial-gradient(circle at var(--start), #613a3a0a 0%, #00000091 10%, rgb(0 0 0 / 53%) 10%, rgb(43 30 30 / 33%) 17%), linear-gradient(to right, #090b15b8, #1d1d1fbd); */
   background: #050d23;
   color: #fff;
@@ -25,7 +25,7 @@ article {
   border-radius: 12px 12px 0 0;
   overflow: hidden;
   background: rgb(4,38,71);
-  background: linear-gradient(90deg, rgba(4,38,71,1) 0%, rgba(0,42,97,0.9164040616246498) 35%, rgba(6,109,193,1) 100%);
+  background: linear-gradient(90deg, rgb(26 27 28) 0%, rgb(26 27 28 / 92%) 35%, rgb(26 29 32) 100%);
   width: 40vw;
   z-index: 999;
 }
@@ -66,7 +66,7 @@ article {
   transform: translate(-140%, -50%);
 }
 .leaderboard__profiles {
-  background-color: #00000085;
+  background-color:#121518;
   /* border-radius: 0 0 12px 12px; */
   padding: 15px 15px 20px;
   display: flow-root;
@@ -138,6 +138,7 @@ body {
   top: 15%;
   /* height: 100%; */
   overflow: hidden;
+  font-variant-caps: all-small-caps;
 }
 
 /* The Modal (background) */
@@ -158,18 +159,18 @@ body {
 /* Modal Content */
 .modal-content {
   position: relative;
-background-color: #000000e0;
-margin: auto;
-padding: 0;
-border: 1px solid #888;
-width: 55%;
-box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);
--webkit-animation-name: animatetop;
--webkit-animation-duration: 0.4s;
-animation-name: animatetop;
-animation-duration: 0.4s;
-color: #2097ff;
-border-radius: 20px;
+  background-color: #0c0d0e;
+  margin: auto;
+  padding: 0;
+  border: 1px solid #888;
+  width: 55%;
+  box-shadow: 0 4px 8px 0 rgb(0 0 0 / 20%), 0 6px 20px 0 rgb(0 0 0 / 19%);
+  -webkit-animation-name: animatetop;
+  -webkit-animation-duration: 0.4s;
+  animation-name: animatetop;
+  animation-duration: 0.4s;
+  color: #d9dee3;
+  border-radius: 20px;
 }
 
 /* Add Animation */
@@ -205,25 +206,19 @@ h2 {
 }
 .modal-header {
   padding: 5px 5px;
-color: white;
-background: rgb(4,38,71);
-background: linear-gradient( 
+  color: white;
+  background: rgb(4,38,71);
+  background: linear-gradient( 
 90deg
-, rgba(4,38,71,1) 0%, rgba(0,42,97,0.9164040616246498) 35%, rgba(6,109,193,1) 100%);
-border-radius: 20px;
-border-bottom-right-radius: 0;
-border-bottom-left-radius: 0;
+, rgb(49 55 60) 0%, rgb(20 23 28 / 92%) 35%, rgb(43 45 46) 100%);
+  border-radius: 20px;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .modal-body {padding: 2px 16px;}
 
-form {
-max-width: 99%;
-margin: 10px;
-padding: 20px 20px;
-background: #031a38;
-border-radius: 8px;
-}
+form {max-width: 99%;margin: 10px;padding: 20px 20px;background: #111214;border-radius: 8px;}
 
 h1 {
 width: 100%;
@@ -245,9 +240,27 @@ input[type="text"], input[type="password"], input[type="date"], input[type="date
   box-shadow: 0 1px 0 rgb(0 0 0 / 3%) inset;
   margin-bottom: 30px;
 }
-button {    padding: 0.6vh;color: #FFF;background-color: #4bc970;font-size: 11px;text-align: center;font-style: normal;border-radius: 5px;width: 100px;border: 1px solid #3ac162;border-width: 1px 1px 3px;box-shadow: 0 -1px 0 rgba(255,255,255,0.1) inset;margin-bottom: 1px;position: absolute;top: 122%;left: 15%;/* height: 50px; */margin-left: 2%;}
+button {
+  padding: 0.6vh;
+  color: #FFF;
+  background-color: #3b3c3e;
+  font-size: 11px;
+  text-align: center;
+  font-style: normal;
+  border-radius: 5px;
+  width: 100px;
+  border: 1px solid #282e2a;
+  border-width: 1px 1px 3px;
+  box-shadow: 0 -1px 0 rgb(255 255 255 / 10%) inset;
+  margin-bottom: 1px;
+  position: absolute;
+  top: 122%;
+  left: 15%;
+  /* height: 50px; */
+  margin-left: 2%;
+}
+            
 
-                
 body::-webkit-scrollbar {
   width: 2em;
 }
@@ -625,9 +638,9 @@ label > span {
   width: 20px;
   height: 20px;
   border-radius: 20px;
-  border: 2px solid #1045a5;
+  border: 2px solid #a5a5a5;
   background: #121517;
-    border-color: #1045a5;
+  border-color: #4c4f50;
 }
 
 .job {
@@ -858,29 +871,24 @@ label > span {
 
 /* <select> styles */
 select {
-  /* Reset */
   -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
-  border: 0;
-  outline: 0;
-  font: inherit;
-  /* Personalize */
-  width: 100%;
-  height: 3em;
-  padding: 0 4em 0 1em;
-  background: url(https://upload.wikimedia.org/wikipedia/commons/9/9d/Caret_down_font_awesome_whitevariation.svg) no-repeat right 0.8em center/1.4em, linear-gradient(to left, rgba(6, 79, 161, 0.747) 3em, rgba(5, 49, 131, 0.884) 3em);
-  color: white;
-  border-radius: 0.25em;
-  box-shadow: 0 0 1em 0 rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  /* <option> colors */
-  /* Remove focus outline */
-  /* Remove IE arrow */
+    -moz-appearance: none;
+    appearance: none;
+    border: 0;
+    outline: 0;
+    font: inherit;
+    width: 100%;
+    height: 3em;
+    padding: 0 4em 0 1em;
+    background: url(https://upload.wikimedia.org/wikipedia/commons/9/9d/Caret_down_font_awesome_whitevariation.svg) no-repeat right 0.8em center/1.4em, linear-gradient(to left, rgb(49 54 58 / 75%) 3em, rgb(32 38 50 / 88%) 3em);
+    color: white;
+    border-radius: 0.25em;
+    box-shadow: 0 0 1em 0 rgb(0 0 0 / 20%);
+    cursor: pointer;
 }
 select option {
   color: inherit;
-  background-color: #022d5f;
+  background-color: #2b2d32;
 }
 select:focus {
   outline: none;
@@ -889,7 +897,7 @@ select::-ms-expand {
   display: none;
 }
 
-// now for the good stuff 🎉
+// now for the good stuff ðŸŽ‰
 	input[type="range"] {
 		outline: 0;
 		border: 0;

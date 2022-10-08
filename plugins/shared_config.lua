@@ -1,3 +1,4 @@
+config = {}
 Plugins = {}
 Plugins.EnableFoodjob = true -- burger shot and coffeebean job
 Plugins.Job = {

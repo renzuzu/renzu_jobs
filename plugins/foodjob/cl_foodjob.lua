@@ -1,6 +1,6 @@
 Citizen.CreateThread(function()
     Wait(2000)
-    while PlayerData == nil do Wait(10) end
+    while PlayerData.job == nil do Wait(10) end
 
 	while Plugins.EnableFoodjob do
 		local job = PlayerData.job.name
@@ -36,7 +36,7 @@ end)
 
 Citizen.CreateThread(function()
     Wait(2000)
-    while PlayerData == nil do Wait(10) end
+    while PlayerData.job == nil do Wait(10) end
 
 	while Plugins.EnableFoodjob do
 		local job = PlayerData.job.name

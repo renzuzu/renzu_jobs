@@ -12,13 +12,13 @@ ui_page {
 }
 
 shared_scripts {
+	'@ox_lib/init.lua',	
 	'/plugins/shared_*.lua'
 }
 client_scripts {
 	"@es_extended/locale.lua",
   	"@es_extended/locales/en.lua",
 	"weaponconfig.lua",
-	"config.lua",
 	"weapons.lua",
 	"client.lua",
 	'plugins/**/cl_*.lua',

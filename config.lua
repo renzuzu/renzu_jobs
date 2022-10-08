@@ -1,15 +1,15 @@
 config = {}
 -- MAIN CONFIG
-config.Mysql = 'mysql-async' -- "ghmattisql", "mysql-async"
+config.Mysql = 'mysql-async' -- "ghmattisql", "mysql-async", oxmysql
 config.esx = '1.2' -- 1.1 or 1.2 , 1.2 are v1final and esx legacy is compatible
 config.css = 'new' -- new or old -- new = 4 column, old 2 column
 config.logo = 'https://forum.cfx.re/uploads/default/original/4X/b/1/9/b196908c7e5dfcd60aa9dca0020119fa55e184cb.png' -- url of logo
 config.keybinds = 'F6' -- Keybinds
 config.commands = 'interaction'
 config.esx_menu = true -- interaction menu if false, contextual menu
-config.useOxInventory = false -- will disable all built in inventory of renzu_jobs, and will use the ox_inventory data
+config.useOxInventory = true -- will disable all built in inventory of renzu_jobs, and will use the ox_inventory data
+config.Oxlib = true -- Ox_lib
 config.renzu_Clothes = false
-
 config.RandomAvatars = { -- if player pedshot is not uploaded yet, we will use Initials avatar
     [1] = {background = 'ffffff', color = '308BFF'},
     [2] = {background = 'E2E519', color = '222'},
@@ -39,46 +39,70 @@ config.usePopui = false -- https://github.com/renzuzu/renzu_popui -- if false, w
 -- WEBHOOK
 config.discordwebhook = true -- enable disable webhook logs to discord
 
+-- INTERACTION START
+-- name == event name
+-- label == Label Text for Menus
+-- icons == font awsome icon
+-- description == description for each menus
+
+-- ALL of the events registered here are samples only, you need to replace with yours
 config.citizen_interaction = {
     --police
-    [1] = {label = 'Check ID', name = 'police:identity_card'},
-    [2] = {label = 'Search', name = 'police:search'},
-    [3] = {label = 'Handcuff', name = 'police:cuff'},
-    [4] = {label = 'Uncuff', name = 'police:uncuff'},
-    [5] = {label = 'Drag', name = 'police:drag'},
-    [6] = {label = 'Put in Vehicle', name = 'police:put_in_vehicle'},
-    [7] = {label = 'Drag out in Vehicle', name = 'police:out_the_vehicle'},
-    [8] = {label = 'Fine', name = 'police:fine'},
-    [9] = {label = 'Unpaid Bills', name = 'police:unpaid_bills'},
-    [10] = {label = 'Jail', name = 'esx-qalle-jail:openJailMenu'},
-    [11] = {label = 'Manage License', name = 'police:managelicense'},
-	[12] = {label = 'Gunshot Residue', name = 'police:gsrtest'},
-    [13] = {label = 'Drug Swab Test', name = 'police:drugtest'},
-    [14] = {label = 'Breathalizer', name = 'police:breathalizer'},
+    [1] = {label = 'Check ID', name = 'police:identity_card', icons = 'id-badge', description = 'Search Nearest Person Identification'},
+    [2] = {label = 'Search', name = 'police:search', icons = 'magnifying-glass-dollar', description = 'Search Nearest Person Inventory'},
+    [3] = {label = 'Handcuff', name = 'police:cuff', icons = 'handcuffs' , description = 'Restrained Nearest Person'},
+    [4] = {label = 'Uncuff', name = 'police:uncuff', icons = 'handcuffs', description = 'Unrestrained nearest Person'},
+    [5] = {label = 'Drag', name = 'police:drag', icons = 'dragon', description = 'Drag nearest Person'},
+    [6] = {label = 'Put in Vehicle', name = 'police:put_in_vehicle', icons='truck-ramp-couch', description = 'Put Nearest Person to Vehicle'},
+    [7] = {label = 'Drag out in Vehicle', name = 'police:out_the_vehicle', icons = 'truck-ramp', description = 'Drag out Nearest Person from Vehicle'},
+   -- [8] = {label = 'Fine', name = 'police:fine'},
+    [8] = {label = 'Unpaid Bills', name = 'police:unpaid_bills', icons = 'money-bill-trend-up', description = 'Check Nearest Person Unpaid Bills'},
+  --  [10] = {label = 'Jail', name = 'HD_Jail:JailMenu'},
+    [9] = {label = 'Manage License', name = 'police:managelicense', icons = 'file-certificate', description = 'Manage Nearest Person Licenses'},
+	[10] = {label = 'Gunshot Residue', name = 'police:gsrtest', icons = 'person-rifle', description = 'Scan Vehicle Computer ECU'},
+    [11] = {label = 'Drug Swab Test', name = 'police:drugtest', icons = 'capsules', description = 'Check Nearest Person'},
+    [12] = {label = 'Breathalizer', name = 'police:breathalizer', icons = 'face-exhaling', description = 'Check Nearest Person Alcohol Level'},
     --EMS   
-    [15] = {label = 'Check BP', name = 'checkbp1'},
-    [16] = {label = 'Revive Citizen', name = 'ems:revive'},
-    [17] = {label = 'Drag', name = 'ems:drag'},
-   -- [17] = {label = 'Revive Patient in Emergency Room', name = 'revive2'},
-    [18] = {label = 'Heal Small Wounds', name = 'ems:small'},
-    [19] = {label = 'Heal Big Wounds', name = 'ems:big'},
-    [20] = {label = 'Search Dead in Area', name = 'ems:searchdeadinarea'},
-    [21] = {label = 'Drag Dead Body', name = 'drag2'},
-    [22]= {label = 'Carry', name = 'carry1'},
+    [13] = {label = 'Check BP', name = 'checkbp1', icons = 'user-doctor-message', description = 'Check Vital Status of Nearest Person'},
+    [14] = {label = 'Revive Citizen', name = 'ems:revive', icons = 'person-falling-burst', description = 'Revive Nearest Person'},
+    [15] = {label = 'Drag', name = 'ems:drag', icons = 'dragon', description = 'Drag Nearest Person'},
+    [16] = {label = 'Treat Small Wounds', name = 'ems:small', icons = 'notes-medical', description = 'Heal a Person up to 50%'},
+    [17] = {label = 'Treat Serious Injuries', name = 'ems:big', icons = 'briefcase-medical', description = 'Heal a Person up to 100%'},
+    [18] = {label = 'Search Dead in Area', name = 'ems:searchdeadinarea', icons = 'magnifying-glass-dollar', description = 'Auto Search Dead Body'},
+    [19] = {label = 'Drag Dead Body', name = 'drag2', icons = 'coffin-cross', description = 'Drag Nearest Dead Person'},
+    [20]= {label = 'Carry', name = 'carry1', icons = 'people-carry-box', description = 'Carry Nearest Person'},
+    [21]= {label = 'Check up', name = 'EMS:CHECKUPHEAL', icons = 'user-doctor', description = 'Check up Nearest Person and Treat Wounds'},
+    [22] = {label = 'Send Patient to Emergency Room', name = 'EMS:SENDEMERGENCYz', icons = 'stretcher', description = 'Send Nearest Peson to ER'},
+    [23] = {label = 'Revive Patient in Emergency Room', name = 'EMS:REVIVEINEMERGENCY', icons = 'bed-pulse', description = 'Revive Person in ER'},
+    [24] = {label = 'Revive Citizen #2', name = 'EMS:REVIVE1', icons = 'bed-pulse', description = 'Advanced Revive'},
+    [25] = {label = 'Send Patient to Operating Room', name = 'send:menu', icons = 'hospital-user', description = 'Send nearest person to Operation Room'},
+    [26] = {label = 'Start Operation', name = 'zero:operate', icons = 'bed', description = 'Start Surgery to nearest person'},
+    [27] = {label = 'Revive Pokemon', name = 'revivepokemon', icons = 'bed-pulse', description = 'Revive Pokemo'},
+
+    
 }
 config.vehicle_interaction = {
-    [1] = {label = 'Vehicle Information', name='police:vehicle_infos'},
-    [2] = {label = 'Hijack', name='police:hijack'},
-    [3] = {label = 'Impound', name='police:impound'},
-    [4] = {label = 'Search Vehicle Plate#', name='police:searchdatabase'},
+    [1] = {label = 'Vehicle Information', name='police:vehicle_infos', icons = 'file-invoice', description = 'Check Vehicle Information'},
+    [2] = {label = 'Hijack', name='police:hijack', icons = 'car-burst', description = 'Hijack nearest vehicle'},
+    [3] = {label = 'Impound', name='police:impound', icons = 'car-tilt', description = 'Impound nearest vehicle'},
+    [4] = {label = 'Search Vehicle Plate#', name='police:searchdatabase', icons = 'print-magnifying-glass', description = 'Search Vehicle Plate tru MDT'},
 
-    [5] = {label = 'Hijack', name='mechanic:hijack'},
-    [6] = {label = 'Clean', name='mechanic:clean'},
-    [7] = {label = 'Scan ECU', name='mechanic:scanecu'},
-    [8] = {label = 'Repair #1', name='mechanic:repair'},
-    [9] = {label = 'Repair #2', name='mechanic:repair2'},
+    [5] = {label = 'Hijack', name='mechanic:hijack', icons = 'car-burst', description = 'Hijack nearest vehicle'},
+    [6] = {label = 'Clean', name='mechanic:clean', icons = 'car-wash', description = 'Clean nearest vehicle'},
+    [7] = {label = 'Scan Car ECU', name='mechanic:scanecu', icons = 'scanner-touchscreen', description = 'Scan Vehicle Computer ECU'},
+    [8] = {label = 'Repair #1', name='mechanic:repair', icons = 'screwdriver-wrench', description = 'Repair Vehicle Engine Up to 50%'},
+    [9] = {label = 'Repair #2', name='mechanic:repair2', icons = 'screwdriver', description = 'Repair Vehicle Engine up to 100%'},
+    [10] = {label = 'Put in Vehicle', name='ems:putinvechile', icons = 'person-seat', description = 'Put in Nearest person to Vehicle'},
+    [11] = {label = 'Drag out in Vehicle', name='ems:dragoutvehicle', icons = 'seat-airline', description = 'Drag out person from vehicle'},
 
 
+}
+
+config.object_interaction = {
+    [1] = {label = 'Spawn Spikes', name='add:spike'},
+    [2] = {label = 'Remove Spikes', name='remove:spike'},
+    [3] = {label = 'Spawn Barrier', name='esx_policejob:barrier'},
+    [4] = {label = 'Remove Barrier', name='esx_policejob:pickup'},
 }
 
 config.moneywashcoord = {
@@ -103,7 +127,7 @@ config.Jobs = {
         ['bossmenu'] = {
             webhook = false, -- change this to your webhook link, if this a false, its mean no loggin at all, ex. 'https://discord.com/api/webhooks/883246462****'
             grade = 9, -- minimum grade to access
-            coord = vector3(462.08367919922,-985.65350341797,30.728076934814),
+            coord = vector3(448.00659179688,-973.38275146484,30.689582824),
             label = 'Boss Action',
             event = 'renzu_jobs:openbossmenu',
         },
@@ -111,7 +135,7 @@ config.Jobs = {
             ['Boss'] = { -- path inventory['Boss']
                 webhook = false, -- change this to your webhook link, if this a false, its mean no loggin at all, ex. 'https://discord.com/api/webhooks/883246462****'
                 grade = 9, -- minimum job grade can access this feature
-                coord = vector3(459.78378295898,-984.77996826172,30.689691543579),
+                coord = vector3(452.18350219727,-973.283203125,30.689582),
                 label = 'Boss Inventory',
                 slots = 100,
                 event = 'renzu_jobs:openinventory',
@@ -119,7 +143,7 @@ config.Jobs = {
             ['Personal'] = { -- path inventory['Personal'][identifier]
                 webhook = false, -- false to not logs else a string of discord webhook link
                 grade = 0,  
-                coord = vector3(461.18109130859,-999.7529296875,30.689517974854),
+                coord = vector3(456.5500793457,-988.57067871094,30.689584732),
                 label = 'Personal Inventory',
                 slots = 20,
                 event = 'renzu_jobs:openinventory',
@@ -127,22 +151,22 @@ config.Jobs = {
             ['Stash'] = { -- path inventory['Stash']
                 webhook = false, -- false to not logs else a string of discord webhook link
                 grade = 0, -- minimum job grade can access this feature
-                coord = vector3(463.08999633789,-999.70928955078,30.689517974854),
+                coord = vector3(457.76483154297,-993.30841064453,30.68958473),
                 label = 'Police Armory', -- same as stash
                 slots = 20,
                 event = 'renzu_jobs:openinventory',
             },
         },
-        -- ['weapon_armory'] = {
-        --     webhook = false, -- change this to your webhook link, if this a false, its mean no loggin at all, ex. 'https://discord.com/api/webhooks/883246462****'
-        --     grade = 0, -- minimum job grade can access this feature
-        --     coord = vector3(485.416015625,-995.29260253906,30.689649581909),
-        --     label = 'Weapon Armory',
-        --     event = 'renzu_jobs:openweapons',
-        -- },
+        ['weapon_armory'] = {
+            webhook = false, -- change this to your webhook link, if this a false, its mean no loggin at all, ex. 'https://discord.com/api/webhooks/883246462****'
+            grade = 0, -- minimum job grade can access this feature
+            coord = vector3(458.64471435547,-979.16040039063,30.689),
+            label = 'Weapon Armory',
+            event = 'renzu_jobs:openweapons',
+        },
         ['wardrobe'] = {
             grade = 0,
-            coord = vector3(463.5813293457,-996.51153564453,30.689487457275),
+            coord = vector3(449.90896606445,-993.20849609375,30.68960),
             label = 'Wardrobe',
             event = 'renzu_jobs:openwardrobe',
         },
@@ -158,32 +182,21 @@ config.Jobs = {
                     [4] = {name = 'WEAPON_SMOKEGRENADE', label = 'Smoke Grenade', value = false},
                     [5] = {name = 'WEAPON_STUNGUN', label = 'Stun Gun', value = false},
                     [6] = {name = 'WEAPON_NIGHTSTICK', label = 'Night Stick', value = false},
+                    [7] = {name = 'bread', label = 'Bread', value = false},
+                    [8] = {name = 'water', label = 'Water', value = false}, -- if false its free
+                    [9] = {name = 'ammo-rifle', label = '5.56mm Ammo', value = false}, -- use capitalize for weapon to avoid bugs
+                    [10] = {name = 'ammo-9', label = '9mm Ammo', value = false}, -- use capitalize for weapon to avoid bugs
+                    [11] = {name = 'lplparmor', label = 'Armor', value = false}, -- use capitalize for weapon to avoid bugs
                 },
-                label = 'Weapon Supply',
-                coord = vector3(485.416015625,-995.29260253906,30.689649581909),
-                event = 'renzu_jobs:openshop',
-            },
-            [2] = {
-                webhook = 'https://discord.com/api/webhooks/911897226849177600/YHGLEPxw9Z_UkO4y6-qPSiUPOZMuB92xrIoG_9T0gOGKIqVOAmIvNmBId0EifMgqvJB6', -- change this to your webhook link, if this a false, its mean no loggin at all, ex. 'https://discord.com/api/webhooks/883246462****'
-                public = false, -- if shop is public or for this job only. (income money will go to this job money)
-                grade = 0, -- minimum job grade can access this feature
-                ['items'] = {
-                    [1] = {name = 'bread', label = 'Bread', value = false},
-                    [2] = {name = 'water', label = 'Water', value = false}, -- if false its free
-                    [3] = {name = 'ammo-rifle', label = '5.56mm Ammo', value = false}, -- use capitalize for weapon to avoid bugs
-                    [4] = {name = 'ammo-9', label = '9mm Ammo', value = false}, -- use capitalize for weapon to avoid bugs
-                    [5] = {name = 'lplparmor', label = 'Armor', value = false}, -- use capitalize for weapon to avoid bugs
-
-                },
-                label = 'Supply Shop',
-                coord = vector3(481.28079223633,-995.30004882813,30.690622329712),
+                label = 'Supply',
+                coord = vector3(452.36520385742,-980.29064941406,30.689579),
                 event = 'renzu_jobs:openshop',
             },
         },
         ['crafting'] = {
             webhook = false, -- change this to your webhook link, if this a false, its mean no loggin at all, ex. 'https://discord.com/api/webhooks/883246462****'
             grade = 0,
-            coord = vector3(487.31411743164,-997.01416015625,30.689649581909),
+            coord = vector3(439.15399169922,-993.43469238281,30.68960),
             label = 'Police Crafting Table',
             event = 'renzu_jobs:opencrafting',
             craftable = {

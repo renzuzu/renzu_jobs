@@ -1,10 +1,14 @@
 local players = {}
 local playernames = {}
-ESX = nil
+ESX = exports['es_extended']:getSharedObject()
 local loaded = false
 local jobtable = {}
 playerinfo = {}
-TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+
+lib.callback.register('renzu_jobs:getConfig', function(source)
+    return config
+end)
+
 CreateThread(function()
     Wait(200)
     local registeredjobs = {}
@@ -54,9 +58,14 @@ CreateThread(function()
 end)
 
 -- Register this stash only when this event is called
-RegisterNetEvent('renzu_jobs:AddStash', function(job, type)
-    local xPlayer = ESX.GetPlayerFromId(source)
-	ox_inventory:RegisterStash(''..job..'_'..type..'', 'Stash', 70, 1000000, false)
+lib.callback.register('renzu_jobs:AddStash', function(source, job, type)
+    local xPlayer = GetPlayerFromId(source)
+    local name = type
+    if type == 'Personal' then
+        type = xPlayer.identifier
+    end
+    print(job, type)
+	return exports.ox_inventory:RegisterStash(''..job..'_'..type..'', name, 70, 1000000, type == 'Personal' and true or false)
 end)
 
 function JobMoney(job,paycheck)
@@ -271,9 +280,9 @@ function SaveClothes(clothename,clothe,xPlayer)
 	})
 end
 
-ESX.RegisterServerCallback('renzu_jobs:selectclothe',function(source, cb, skin)
+lib.callback.register('renzu_jobs:selectclothe',function(source, skin)
     local source = tonumber(source)
-    local xPlayer = ESX.GetPlayerFromId(source)
+    local xPlayer = GetPlayerFromId(source)
     SqlFunc(config.Mysql,'execute','UPDATE users SET skin = @skin WHERE identifier = @identifier', {
         ['@skin'] = json.encode(skin),
         ['@identifier'] = xPlayer.identifier
@@ -311,10 +320,10 @@ function addMoneyOffline(identifier,amount)
     end
 end
 
-ESX.RegisterServerCallback('renzu_jobs:playerlist', function (source, cb)
+lib.callback.register('renzu_jobs:playerlist', function (source)
     playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users', {})
     local source = tonumber(source)
-    local xPlayer = ESX.GetPlayerFromId(source)
+    local xPlayer = GetPlayerFromId(source)
     local jobs = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
     local salary = {}
     local job =  xPlayer.job.name
@@ -341,7 +350,7 @@ ESX.RegisterServerCallback('renzu_jobs:playerlist', function (source, cb)
     local xPlayers = ESX.GetPlayers()
     local mycoord = GetEntityCoords(GetPlayerPed(source))
     for i=1, #xPlayers, 1 do
-        local toPlayer = ESX.GetPlayerFromId(xPlayers[i])
+        local toPlayer = GetPlayerFromId(xPlayers[i])
         if #(mycoord - GetEntityCoords(GetPlayerPed(toPlayer.source))) < 50 and xPlayer.job.name ~= toPlayer.job.name then
             table.insert(online,{name = toPlayer.name, id = toPlayer.identifier})
         end
@@ -357,7 +366,7 @@ ESX.RegisterServerCallback('renzu_jobs:playerlist', function (source, cb)
     end
     local count = 0
     for k,v in pairs(playerinfo) do count = count + 1 end
-    cb(list, count, true,'',xPlayer.job.name,JobMoney(xPlayer.job.name), config.Jobs[xPlayer.job.name],online)
+    return cb(list, count, true,'',xPlayer.job.name,JobMoney(xPlayer.job.name), config.Jobs[xPlayer.job.name],online)
 end)
 
 function SendtoDiscord(webhook,color,title,desc)
@@ -386,31 +395,31 @@ function DiscordMessage(xPlayer,action,val,receiver)
                     receiver
 end
 
-ESX.RegisterServerCallback('renzu_jobs:getJobmoney',function(source, cb, job, type)
+lib.callback.register('renzu_jobs:getJobmoney',function(source, job, type)
     local source = source
-    local xPlayer = ESX.GetPlayerFromId(source)
+    local xPlayer = GetPlayerFromId(source)
     local money = JobMoney(job)[type]
     return money or 0
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:sendbonus',function(source, cb, identifier, amount)
+lib.callback.register('renzu_jobs:sendbonus',function(source, identifier, amount)
     local source = source
-    local xPlayer = ESX.GetPlayerFromId(source)
-    local toPlayer = ESX.GetPlayerFromIdentifier(identifier)
+    local xPlayer = GetPlayerFromId(source)
+    local toPlayer = GetPlayerFromIdentifier(identifier)
     if config.Jobs[xPlayer.job.name] ~= nil and config.Jobs[xPlayer.job.name].grade[xPlayer.job.grade]['access'].givebonus then
         
         if toPlayer then
             if tonumber(amount) > 0 and JobMoney(xPlayer.job.name).money >= tonumber(amount) then
                 removeMoney(tonumber(amount),xPlayer.job.name,source,'money')
                 toPlayer.addMoney(tonumber(amount))
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You give $'..tonumber(amount)..' to '..toPlayer.name)
-                TriggerClientEvent('renzu_notify:Notify',toPlayer.source, 'success','Job', 'You Receive $'..tonumber(amount)..' Bonus from '..xPlayer.job.grade_label..' '..xPlayer.name..'')
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You give $'..tonumber(amount)..' to '..toPlayer.name)
+                TriggerClientEvent('renzu_notify:Notify',toPlayer.source,'success','Job', 'You Receive $'..tonumber(amount)..' Bonus from '..xPlayer.job.grade_label..' '..xPlayer.name..'')
                 if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                     SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Send',amount,toPlayer.name))
                 end
-                cb(true)
+                return cb(true)
             else
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough money in stock')
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough money in stock')
             end
         else
             
@@ -422,19 +431,19 @@ ESX.RegisterServerCallback('renzu_jobs:sendbonus',function(source, cb, identifie
                         name = v.firstname
                     end
                 end
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You give $'..tonumber(amount)..' to '..name)
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You give $'..tonumber(amount)..' to '..name)
                 addMoneyOffline(identifier,tonumber(amount))
                 if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                     SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Send',amount,name))
                 end
-                cb(true)
+                return cb(true)
             else
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough money in stock')
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough money in stock')
             end
         end
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have access')
-        cb(false)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have access')
+        return cb(false)
     end
 end)
 
@@ -452,9 +461,9 @@ GetExtendedPlayers = function(key, val) -- compatibility with non esx_legacy
 	return xPlayers
 end
 
-ESX.RegisterServerCallback('renzu_jobs:changesalary', function (source, cb, grade, amount) -- basecode esx_society - Credits
+lib.callback.register('renzu_jobs:changesalary', function (source, grade, amount) -- basecode esx_society - Credits
     local source = source
-    local xPlayer = ESX.GetPlayerFromId(source)
+    local xPlayer = GetPlayerFromId(source)
     local grade = tonumber(grade)
     local amount = tonumber(amount)
     if config.Jobs[xPlayer.job.name].grade[xPlayer.job.grade]['access'].salarychange then
@@ -473,16 +482,16 @@ ESX.RegisterServerCallback('renzu_jobs:changesalary', function (source, cb, grad
                 if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                     SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Salary Change',amount,config.Jobs[xPlayer.job.name]['grade'][tonumber(grade)].label))
                 end
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You successfully change the salary')
-                cb(true)
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You successfully change the salary')
+                return cb(true)
             end)
         else
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Over Budget for Salary Amount')
-            cb(false)
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Over Budget for Salary Amount')
+            return cb(false)
         end
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have access')
-        cb(false)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have access')
+        return cb(false)
     end
 end)
 
@@ -497,9 +506,9 @@ function Cancarry(xPlayer,item,amount)
     return false
 end
 
-ESX.RegisterServerCallback('renzu_jobs:buyitem',function(source, cb, item, amount, job, shopindex)
+lib.callback.register('renzu_jobs:buyitem',function(source, item, amount, job, shopindex)
     local source = source
-    local xPlayer = ESX.GetPlayerFromId(source)
+    local xPlayer = GetPlayerFromId(source)
     if config.Jobs[xPlayer.job.name] ~= nil and xPlayer.job.grade >= config.Jobs[xPlayer.job.name]['shop'][shopindex].grade or config.Jobs[job] ~= nil and config.Jobs[job]['shop'][shopindex].public then
         local found = false
         local value = 0
@@ -530,31 +539,31 @@ ESX.RegisterServerCallback('renzu_jobs:buyitem',function(source, cb, item, amoun
                 xPlayer.addWeapon(item, 100)
                 SetPedAmmo(GetPlayerPed(source),GetHashKey(item),100)
             end
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You Bought '..label)
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You Bought '..label)
             if config.Jobs[xPlayer.job.name]['shop'][shopindex].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['shop'][shopindex].webhook,16711680,config.Jobs[xPlayer.job.name]['shop'][shopindex].label,DiscordMessage(xPlayer,'Buy item',label..' '..amount,' '))
             end
-            cb(true)
+            return cb(true)
         elseif not Cancarry(xPlayer,item,tonumber(amount)) and found then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have inventory space')
-            cb(false)
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have inventory space')
+            return cb(false)
         elseif found then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have enough money')
-            cb(false)
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have enough money')
+            return cb(false)
         else
             -- item is not register to config (EXPLOITING?)
             -- ban trigger here
-            cb(false)
+            return cb(false)
         end
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have access')
-        cb(false)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have access')
+        return cb(false)
     end
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:withdraw_deposit',function(source, cb, type, amount, money_type)
+lib.callback.register('renzu_jobs:withdraw_deposit',function(source, type, amount, money_type)
     local source = source
-    local xPlayer = ESX.GetPlayerFromId(source)
+    local xPlayer = GetPlayerFromId(source)
     if xPlayer.job.name then
         local wperm = config.Jobs[xPlayer.job.name] ~= nil and config.Jobs[xPlayer.job.name].grade[xPlayer.job.grade]['access'].withdraw
         local dperm = config.Jobs[xPlayer.job.name] ~= nil and config.Jobs[xPlayer.job.name].grade[xPlayer.job.grade]['access'].deposit
@@ -565,14 +574,14 @@ ESX.RegisterServerCallback('renzu_jobs:withdraw_deposit',function(source, cb, ty
             else
                 xPlayer.addAccountMoney(money_type, tonumber(amount))
             end
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You Withdraw '..amount..' from '..xPlayer.job.name..' money')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You Withdraw '..amount..' from '..xPlayer.job.name..' money')
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Withdraw',amount,money_type))
             end
         elseif type == 0 and wperm then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'not enough money in stock')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'not enough money in stock')
         elseif type == 0 then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'No permission')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'No permission')
         end
         
         local esxold = false
@@ -589,23 +598,23 @@ ESX.RegisterServerCallback('renzu_jobs:withdraw_deposit',function(source, cb, ty
             else
                 xPlayer.removeAccountMoney(money_type, tonumber(amount))
             end
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You Deposit '..amount..' from '..xPlayer.job.name..' money')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You Deposit '..amount..' from '..xPlayer.job.name..' money')
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Deposit',amount,money_type))
             end
         elseif type == 1 and dperm then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have enough money')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have enough money')
         elseif type == 1 then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'No permission')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'No permission')
         end
     end
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:setjob',function(source, cb, grade, identifier)
+lib.callback.register('renzu_jobs:setjob',function(source, grade, identifier)
     local source = source
-    local xPlayer = ESX.GetPlayerFromId(source)
+    local xPlayer = GetPlayerFromId(source)
     if config.Jobs[xPlayer.job.name] ~= nil and config.Jobs[xPlayer.job.name].grade[xPlayer.job.grade]['access'].gradechange then
-        local toPlayer = ESX.GetPlayerFromIdentifier(identifier)
+        local toPlayer = GetPlayerFromIdentifier(identifier)
         if toPlayer then
             text = 'Promoted'
             notify = 'success'
@@ -616,12 +625,12 @@ ESX.RegisterServerCallback('renzu_jobs:setjob',function(source, cb, grade, ident
             toPlayer.setJob(xPlayer.job.name, tonumber(grade))
             playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM users', {})
             Wait(100)
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You '..text..' '..toPlayer.name..' as a '..xPlayer.job.grade_label)
-            TriggerClientEvent('renzu_notify:Notify',toPlayer.source, notify,'Job', 'You have been '..text..' by '..xPlayer.name..' to '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label)
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You '..text..' '..toPlayer.name..' as a '..xPlayer.job.grade_label)
+            TriggerClientEvent('renzu_notify:Notify',toPlayer.source,notify,'Job', 'You have been '..text..' by '..xPlayer.name..' to '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label)
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,text,'',xPlayer.name..' to '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label))
             end
-            cb(true)
+            return cb(true)
         else
             text = 'Promoted'
             notify = 'success'
@@ -644,32 +653,32 @@ ESX.RegisterServerCallback('renzu_jobs:setjob',function(source, cb, grade, ident
                 notify = 'warning'
             end
             
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You '..text..' '..name..' as a '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label)
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You '..text..' '..name..' as a '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label)
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,text,'',name..' to '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label))
             end
-            cb(true)
+            return cb(true)
         end
         
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have access')
-        cb(false)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have access')
+        return cb(false)
     end
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:kick',function(source, cb, identifier)
+lib.callback.register('renzu_jobs:kick',function(source, identifier)
     local source = source
-    local xPlayer = ESX.GetPlayerFromId(source)
+    local xPlayer = GetPlayerFromId(source)
     if config.Jobs[xPlayer.job.name] ~= nil and config.Jobs[xPlayer.job.name].grade[xPlayer.job.grade]['access'].fire then
-        local toPlayer = ESX.GetPlayerFromIdentifier(identifier)
+        local toPlayer = GetPlayerFromIdentifier(identifier)
         if toPlayer then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You Kicked '..toPlayer.name..' from '..xPlayer.job.label)
-            TriggerClientEvent('renzu_notify:Notify',toPlayer.source, 'info','Job', 'You have been fired by '..xPlayer.name..' from '..xPlayer.job.label)
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You Kicked '..toPlayer.name..' from '..xPlayer.job.label)
+            TriggerClientEvent('renzu_notify:Notify',toPlayer.source,'info','Job', 'You have been fired by '..xPlayer.name..' from '..xPlayer.job.label)
             toPlayer.setJob(config.defaultjob, 0)
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Fired','',toPlayer.name))
             end
-            cb(true)
+            return cb(true)
         else
             local name =  xPlayer.job.name..' Member'
             local jobgrade = 0
@@ -680,21 +689,21 @@ ESX.RegisterServerCallback('renzu_jobs:kick',function(source, cb, identifier)
                 end
             end
             UpdateJob(identifier, config.defaultjob, 0)
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You Kicked '..name..' from '..config.Jobs[xPlayer.job.name].grade[tonumber(jobgrade)].label)
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You Kicked '..name..' from '..config.Jobs[xPlayer.job.name].grade[tonumber(jobgrade)].label)
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Fired','',name))
             end
-            cb(true)
+            return cb(true)
         end
         
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have access')
-        cb(false)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have access')
+        return cb(false)
     end
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amount, item, inv_type, slot)
-	local xPlayer    = ESX.GetPlayerFromId(source)
+lib.callback.register('renzu_jobs:itemfunc', function(source, type, amount, item, inv_type, slot)
+	local xPlayer    = GetPlayerFromId(source)
 	local i = xPlayer.getInventoryItem(item)
     if item == 'black_money' and not config.black_money_item then
         i = {count = xPlayer.getAccount('black_money').money}
@@ -718,14 +727,14 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
                 xPlayer.removeAccountMoney('black_money',tonumber(amount))
             end
             callback = true
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You deposit '..label..' x'..amount)
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You deposit '..label..' x'..amount)
             if config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook,16711680,'Inventory',DiscordMessage(xPlayer,'Deposit Item',label..' x'..amount,inv_type..' Inventory'))
             end
-            cb(callback)
+            return cb(callback)
         elseif type == 1 then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have enough')
-            cb(callback)
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have enough')
+            return cb(callback)
         end
         if not isweapon and type == 0 and tonumber(amount) > 0 and GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item] >= amount 
         or type == 0 and isweapon and GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item]['data'] ~= nil and not xPlayer.hasWeapon(item) then
@@ -753,7 +762,7 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
                     xPlayer.addInventoryItem(item, tonumber(amount))
                     callback = true
                 else
-                    TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough inventory space')
+                    TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough inventory space')
                     callback = false
                     return
                 end
@@ -764,36 +773,36 @@ ESX.RegisterServerCallback('renzu_jobs:itemfunc', function(source, cb, type, amo
             end
             if callback then
                 removeItem(xPlayer.job.name,item,amount,source,inv_type,xPlayer,slot)
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'You withdraw '..label..' x'..amount)
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You withdraw '..label..' x'..amount)
             end
             if config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook,16711680,'Inventory',DiscordMessage(xPlayer,'Withdraw Item',label..' x'..amount,inv_type..' Inventory'))
             end
-            cb(callback)
+            return cb(callback)
         elseif type == 0 then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough stock')
-            cb(callback)
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough stock')
+            return cb(callback)
         end
         
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have a permission to access')
-        cb(callback)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have a permission to access')
+        return cb(callback)
     end
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:getPlayerWeapons', function(source, cb, job, type)
+lib.callback.register('renzu_jobs:getPlayerWeapons', function(source, job, type)
     local source = source
-    local xPlayer    = ESX.GetPlayerFromId(source)
+    local xPlayer    = GetPlayerFromId(source)
     Wait(1000)
-    cb(xPlayer.getLoadout())
+    return cb(xPlayer.getLoadout())
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:getweapon', function(source, cb, weapon)
+lib.callback.register('renzu_jobs:getweapon', function(source, weapon)
     local source = source
-    local xPlayer    = ESX.GetPlayerFromId(source)
+    local xPlayer    = GetPlayerFromId(source)
     if xPlayer.hasWeapon(weapon) then
         xPlayer.removeWeapon(weapon)
-        cb(true)
+        return cb(true)
     else
         xPlayer.addWeapon(weapon, 100)
         SetCurrentPedWeapon(GetPlayerPed(source),GetHashKey(weapon),true)
@@ -802,19 +811,19 @@ ESX.RegisterServerCallback('renzu_jobs:getweapon', function(source, cb, weapon)
             SendtoDiscord(config.Jobs[xPlayer.job.name]['weapon_armory'].webhook,16711680,'Weapon Armory',DiscordMessage(xPlayer,'Get Weapon',weapon,' '))
         end
         Wait(100)
-        cb(true)
+        return cb(true)
     end
 end)
 
 local ongoingcrafting = {}
-ESX.RegisterServerCallback('renzu_jobs:craftitem', function(source, cb, item, amount, type)
+lib.callback.register('renzu_jobs:craftitem', function(source, item, amount, type)
     local source = source
-	local xPlayer    = ESX.GetPlayerFromId(source)
+	local xPlayer    = GetPlayerFromId(source)
     local conf = config.Jobs[xPlayer.job.name]['crafting']['craftable'][item]
     local isweapon = string.find(item:upper(), "WEAPON_")
     local callback = false
     if isweapon and tonumber(amount) > 1 then
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You can only craft weapons one at a time')
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You can only craft weapons one at a time')
     elseif ongoingcrafting[source] == nil then
         if conf ~= nil then
             local notenoughcabron = false
@@ -827,7 +836,7 @@ ESX.RegisterServerCallback('renzu_jobs:craftitem', function(source, cb, item, am
                 end
             end
             if notenoughcabron then
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough requirement')
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough requirement')
             elseif Cancarry(xPlayer,item,tonumber(amount)) then
                 callback = true
                 ongoingcrafting[source] = true
@@ -853,7 +862,7 @@ ESX.RegisterServerCallback('renzu_jobs:craftitem', function(source, cb, item, am
                     effect = 'slide', -- The animation effect when adding or removing notification elements. Accepted values: fade or slide.
                     easing = 'ease-in-out', -- linear, ease, ease-in, ease-out, ease-in-out or a custom cubic-bezier value.
                 }
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'default','Crafting Table', 'in Progress Please Wait ', option)
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'default','Crafting Table', 'in Progress Please Wait ', option)
                 Wait(conf.seconds * tonumber(amount) * 1000)
                 if isweapon then
                     xPlayer.addWeapon(item, 0)
@@ -875,54 +884,55 @@ ESX.RegisterServerCallback('renzu_jobs:craftitem', function(source, cb, item, am
                     FreezeEntityPosition(GetPlayerPed(source),false)
                     return
                 end)
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Crafting Table', 'Successfully Crafted a '..item, option)
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Crafting Table', 'Successfully Crafted a '..item, option)
                 if config.Jobs[xPlayer.job.name]['crafting'].webhook then
                     SendtoDiscord(config.Jobs[xPlayer.job.name]['crafting'].webhook,16711680,config.Jobs[xPlayer.job.name]['crafting'].label,DiscordMessage(xPlayer,'Craft a item ',item..' x'..amount,' '))
                 end
             elseif not Cancarry(xPlayer,item,tonumber(amount)) then
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Not enough inventory space')
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough inventory space')
                 callback = false
                 return
             end
         else
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Crafting Table', 'item not exist in this crafting table')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Crafting Table', 'item not exist in this crafting table')
         end
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'warning','Crafting Table', 'Ongoing crafting..')
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'warning','Crafting Table', 'Ongoing crafting..')
     end
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:saveclothes', function(source, cb, name, data)
-    local xPlayer    = ESX.GetPlayerFromId(source)
+lib.callback.register('renzu_jobs:saveclothes', function(source, name, data)
+    local xPlayer    = GetPlayerFromId(source)
     SaveClothes(name,data,xPlayer)
-    cb(true)
+    return cb(true)
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:setweaponcomponents', function(source, cb, weapon, component)
-    local xPlayer    = ESX.GetPlayerFromId(source)
-    local component = tostring(component)
+lib.callback.register('renzu_jobs:setweaponcomponents', function(source, weapon, component, slot)
+    local xPlayer    = GetPlayerFromId(source)
+    local component = component
     local weapon = tostring(weapon)
-    if xPlayer.hasWeaponComponent(weapon, component) then
-        xPlayer.removeWeaponComponent(weapon, component)
-        cb(true)
+    print(weapon, component, slot, type(compo))
+    if xPlayer.hasWeaponComponent(weapon, component, slot) then
+        xPlayer.removeWeaponComponent(weapon, component, slot)
+        return cb(true)
     else
-        xPlayer.addWeaponComponent(weapon, component)
-        cb(true)
+        xPlayer.addWeaponComponent(weapon, component, slot)
+        return cb(true)
     end
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:getPlayerWardrobe', function(source, cb)
-    local xPlayer    = ESX.GetPlayerFromId(source)
+lib.callback.register('renzu_jobs:getPlayerWardrobe', function(source)
+    local xPlayer    = GetPlayerFromId(source)
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM saveclothes WHERE identifier = @identifier', {['@identifier'] = xPlayer.identifier})
     local wardrobe = {}
     if result[1] then
         wardrobe = json.decode(result[1].wardrobe)
     end
-    cb(wardrobe)
+    return cb(wardrobe)
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:getvehicles', function(source, cb)
-    local xPlayer    = ESX.GetPlayerFromId(source)
+lib.callback.register('renzu_jobs:getvehicles', function(source)
+    local xPlayer    = GetPlayerFromId(source)
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM owned_vehicles WHERE owner = @owner', {['@owner'] = xPlayer.identifier})
     local garage = {}
     if result[1] then
@@ -949,11 +959,11 @@ ESX.RegisterServerCallback('renzu_jobs:getvehicles', function(source, cb)
     end
     vehicles = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM vehicles', {})
     
-    cb(garage,vehicles)
+    return cb(garage,vehicles)
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:takeoutvehicle', function(source, cb, plate)
-    local xPlayer    = ESX.GetPlayerFromId(source)
+lib.callback.register('renzu_jobs:takeoutvehicle', function(source, plate)
+    local xPlayer    = GetPlayerFromId(source)
     
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM owned_vehicles WHERE owner = @owner AND plate = @plate', {
         ['@owner'] = xPlayer.identifier,
@@ -966,16 +976,16 @@ ESX.RegisterServerCallback('renzu_jobs:takeoutvehicle', function(source, cb, pla
             ['@plate'] = plate,
             ['@stored'] = 0,
         })
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'Successfully take out a vehicle')
-        cb(true)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Successfully take out a vehicle')
+        return cb(true)
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont owned the vehicle')
-        cb(false)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont owned the vehicle')
+        return cb(false)
     end
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:storevehicle', function(source, cb, plate, prop)
-    local xPlayer    = ESX.GetPlayerFromId(source)
+lib.callback.register('renzu_jobs:storevehicle', function(source, plate, prop)
+    local xPlayer    = GetPlayerFromId(source)
     
     local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM owned_vehicles WHERE owner = @owner AND plate = @plate', {
         ['@owner'] = xPlayer.identifier,
@@ -1003,30 +1013,30 @@ ESX.RegisterServerCallback('renzu_jobs:storevehicle', function(source, cb, plate
                 ['@garage'] = json.encode(vehicles),
             })
         end
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'Successfully Store a vehicle')
-        cb(true)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Successfully Store a vehicle')
+        return cb(true)
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont owned the vehicle')
-        cb(false)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont owned the vehicle')
+        return cb(false)
     end
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:returnvehicle', function(source, cb, plate)
-    local xPlayer    = ESX.GetPlayerFromId(source)
+lib.callback.register('renzu_jobs:returnvehicle', function(source, plate)
+    local xPlayer    = GetPlayerFromId(source)
     
     if xPlayer.getMoney() >= 500 then
         xPlayer.removeMoney(500)
-        cb(true)
+        return cb(true)
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have enough money to pay valet')
-        cb(false)
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have enough money to pay valet')
+        return cb(false)
     end
 end)
 
 RegisterNetEvent('renzu_jobs:updatejob')
 AddEventHandler('renzu_jobs:updatejob', function(job)
     local source = source
-    local xPlayer    = ESX.GetPlayerFromId(source)
+    local xPlayer    = GetPlayerFromId(source)
     
     UpdateJob(xPlayer.identifier, xPlayer.job.name, tonumber(xPlayer.job.grade))
 end)
@@ -1034,7 +1044,7 @@ end)
 RegisterNetEvent('renzu_jobs:duty')
 AddEventHandler('renzu_jobs:duty', function(job,state)
     local source = source
-    local xPlayer    = ESX.GetPlayerFromId(source)
+    local xPlayer    = GetPlayerFromId(source)
     local grade = xPlayer.job.grade
     local job = job
     local text = 'Onduty'
@@ -1044,7 +1054,7 @@ AddEventHandler('renzu_jobs:duty', function(job,state)
     end
     xPlayer.setJob(job, grade)
     Wait(500)
-    TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'Successfully '..text)
+    TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Successfully '..text)
     UpdateJob(xPlayer.identifier, job, grade)
 end)
 
@@ -1106,8 +1116,8 @@ function GenPlate()
     return plate
 end
 
-ESX.RegisterServerCallback('renzu_jobs:buyvehicle', function(source, cb, model)
-    local xPlayer    = ESX.GetPlayerFromId(source)
+lib.callback.register('renzu_jobs:buyvehicle', function(source, model)
+    local xPlayer    = GetPlayerFromId(source)
     local conf = config.Jobs[xPlayer.job.name]['vehicleshop'].vehicles
     for k,v in pairs(conf) do
         
@@ -1134,18 +1144,18 @@ ESX.RegisterServerCallback('renzu_jobs:buyvehicle', function(source, cb, model)
                         ['@name'] = xPlayer.job.name,
                         ['@garage'] = json.encode(vehicles),
                     })
-                    TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'Successfully Bought a Vehicle - Check your Garage')
+                    TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Successfully Bought a Vehicle - Check your Garage')
                     if config.Jobs[xPlayer.job.name]['vehicleshop'].webhook then
                         SendtoDiscord(config.Jobs[xPlayer.job.name]['vehicleshop'].webhook,16711680,config.Jobs[xPlayer.job.name]['vehicleshop'].label,DiscordMessage(xPlayer,'Buy Vehicle',model,' '))
                     end
-                    cb(true)
+                    return cb(true)
                 else
-                    TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have enough money')
-                    cb(false)
+                    TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have enough money')
+                    return cb(false)
                 end
             else
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'You dont have a permmision to buy this vehicle')
-                cb(false)
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have a permmision to buy this vehicle')
+                return cb(false)
             end
             break
         end
@@ -1157,9 +1167,9 @@ function Round(num)
 	return math.floor(num+0.5)
 end
 
-ESX.RegisterServerCallback('renzu_jobs:washmoney', function(source, cb, amount, id)
+lib.callback.register('renzu_jobs:washmoney', function(source, amount, id)
     local source = source
-	local xPlayer    = ESX.GetPlayerFromId(source)
+	local xPlayer    = GetPlayerFromId(source)
     local id = id
     local coord = GetEntityCoords(GetPlayerPed(source))
     if tonumber(amount) < 0 then
@@ -1167,9 +1177,8 @@ ESX.RegisterServerCallback('renzu_jobs:washmoney', function(source, cb, amount, 
         return
     end
     if xPlayer.getAccount('black_money').money < tonumber(amount) then
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'warning','Job', 'Black money onhand is insufficient')
-        cb('notenough')
-        return
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'warning','Job', 'Black money onhand is insufficient')
+        return cb('notenough')
     end
     if not config.MoneyWash[id].inuse then
         Citizen.CreateThread(function()
@@ -1187,29 +1196,29 @@ ESX.RegisterServerCallback('renzu_jobs:washmoney', function(source, cb, amount, 
                 xPlayer.addMoney(money)
                 addMoney(tonumber(tax),config.MoneyWashOwner,src,'money')
                 print('sending washed money',money)
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'Money is Successfuly Washed')
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Money is Successfuly Washed')
             else
                 local money = Round(tonumber(amount) * (1-config.MoneyWashTax))
                 addMoney(tonumber(money),config.MoneyWashOwner,src,'money')
                 TriggerClientEvent('renzu_jobs:washuse',-1, id,config.MoneyWash[id].inuse)
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Money is Successfuly Washed and someone took it')
+                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Money is Successfuly Washed and someone took it')
             end
         end)
         Wait(1000)
-        cb(true)
+        return cb(true)
     else
-        cb(false)
+        return cb(false)
     end
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:getBlackMoney', function(source, cb)
-	local xPlayer    = ESX.GetPlayerFromId(source)
+lib.callback.register('renzu_jobs:getBlackMoney', function(source)
+	local xPlayer    = GetPlayerFromId(source)
 	local blackMoney = xPlayer.getAccount('black_money').money
-    cb(blackMoney)
+    return cb(blackMoney)
 end)
 
-ESX.RegisterServerCallback('renzu_jobs:getPlayerInventory', function(source, cb, job, type)
-	local xPlayer    = ESX.GetPlayerFromId(source)
+lib.callback.register('renzu_jobs:getPlayerInventory', function(source, job, type)
+	local xPlayer    = GetPlayerFromId(source)
 	local blackMoney = xPlayer.getAccount('black_money').money
 	local items      = xPlayer.inventory
     local jobinventory = {}
@@ -1270,13 +1279,13 @@ ESX.RegisterServerCallback('renzu_jobs:getPlayerInventory', function(source, cb,
             name = 'black_money'
         })
         
-        cb({
+        return cb({
             playerinventory      = playerinventory,
             weapons    = xPlayer.getLoadout(),
             inventory = jobinventory
         })
     else
-        cb(false)
+        return cb(false)
     end
 end)
 
@@ -1317,7 +1326,7 @@ end
 
 RegisterCommand('job', function(source,args)
     local source = source
-    local xPlayer = ESX.GetPlayerFromId(source)
+    local xPlayer = GetPlayerFromId(source)
     if xPlayer.getGroup() == 'superadmin' or xPlayer.getGroup() == 'admin' then
         if args[1] == 'add' and args[2] ~= nil and args[3] ~= nil then
             SqlFunc(config.Mysql,'execute','INSERT INTO jobs (name, label, whitelisted) VALUES (@name, @label, @whitelisted)', {
@@ -1325,11 +1334,11 @@ RegisterCommand('job', function(source,args)
                 ['@label']   = args[3],
                 ['@whitelisted'] = args[4] or 0
             })
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'Job '..args[2]..' '..args[3]..' has been added')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Job '..args[2]..' '..args[3]..' has been added')
         elseif args[1] == 'add' and args[2] == nil then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Job name is not defined! - example usage: /job add police Police 1')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Job name is not defined! - example usage: /job add police Police 1')
         elseif args[1] == 'add' and args[2] ~= nil and args[3] == nil then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', 'Job Label is not defined! - example usage: /job add police Police 1')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Job Label is not defined! - example usage: /job add police Police 1')
         elseif args[1] == 'grade' and args[2] ~= nil and args[3] ~= nil and args[4] ~= nil then
             SqlFunc(config.Mysql,'execute','INSERT INTO job_grades (job_name, grade, name, label) VALUES (@job_name, @grade, @name, @label)', {
                 ['@job_name']   = args[2],
@@ -1337,22 +1346,22 @@ RegisterCommand('job', function(source,args)
                 ['@name'] = string.gsub(args[4], "%s+", ""):lower(),
                 ['@label'] = args[4],
             })
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'Job Grade '..args[3]..' ('..args[4]..') has been added to '..args[2])
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Job Grade '..args[3]..' ('..args[4]..') has been added to '..args[2])
         elseif args[1] == 'grade' and args[2] == nil then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', '(string) Job name is not defined! - example usage: /job grade police 1 Officer')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', '(string) Job name is not defined! - example usage: /job grade police 1 Officer')
         elseif args[1] == 'grade' and args[2] ~= nil and args[3] == nil then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', '(int) Job grade is not defined! - example usage: /job grade police 1 Officer')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', '(int) Job grade is not defined! - example usage: /job grade police 1 Officer')
         elseif args[1] == 'grade' and args[2] ~= nil and args[3] ~= nil and args[4] == nil then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'error','Job', '(string) Job Label is not defined! - example usage: /job grade police 1 Officer')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', '(string) Job Label is not defined! - example usage: /job grade police 1 Officer')
         else
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'info','Job', 'Job adder example:<br> /job add police Police 1 <br> Job grade adder example usage: <br>/job grade police 1 Officer')
+            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'info','Job', 'Job adder example:<br> /job add police Police 1 <br> Job grade adder example usage: <br>/job grade police 1 Officer')
         end
     end
 end, false)
 
 RegisterCommand('jobrefresh', function(source,args)
     local source = source
-    local xPlayer = ESX.GetPlayerFromId(source)
+    local xPlayer = GetPlayerFromId(source)
     if xPlayer.getGroup() == 'superadmin' or xPlayer.getGroup() == 'admin' then
         local Jobs = {}
         local jobs = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM jobs', {})
@@ -1377,6 +1386,13 @@ RegisterCommand('jobrefresh', function(source,args)
         end
         ESX.Jobs = Jobs
         TriggerEvent('esx:updatejobs',source,Jobs)
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source, 'success','Job', 'ESX Jobs Has been Refreshed')
+        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'ESX Jobs Has been Refreshed')
     end
 end)
+
+cb2 = function(data)
+    return table.unpack(data)
+end
+cb = function(...)
+    return cb2({...})
+end
