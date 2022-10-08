@@ -63,6 +63,11 @@ GetItemMetaData = function(item,meta,slot,src)
 	return data.metadata[meta] or {}
 end
 
+GetPlayerFromIdentifier = function(identifier)
+	local self = ESX.GetPlayerFromIdentifier(identifier)
+	return self and GetPlayerFromId(self.source)
+end
+
 GetPlayerFromId = function(src)
 	local self = ESX.GetPlayerFromId(src)
 	if self.hasWeapon == nil then
