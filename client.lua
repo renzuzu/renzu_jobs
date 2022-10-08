@@ -596,42 +596,6 @@ JobZone.Add = function(coord,msg,event,server,var,job)
     table.insert(JobZone.Spheres,sphere)
 end
 
--- PUBLIC SHOPS && DUTY
-local currentwash = nil
-Citizen.CreateThread(function()
-    Wait(2000)
-    while PlayerData.job == nil do Wait(10) end
-    if config.Oxlib then
-        for k2,data in pairs(config.Jobs) do
-            if data['public_inventory'] then
-                for k,v in pairs(data['public_inventory']) do
-                    JobZone.Add(v.coord,v.label,v.event,false,{k,k2})
-                end
-            end
-            if data['shop'] then
-                for k,v in ipairs(data['shop']) do
-                    JobZone.Add(v.coord,v.label,v.event,false,{'shop',k2,v.public,k})
-                end
-            end
-            if data['duty'] then
-                JobZone.Add(data['duty'].coord,data['duty'].label,data['duty'].event,false,{'duty',k2,data['duty'].offdutyname})
-            end
-            for k,v in pairs(config.moneywashcoord) do
-                local ent = config.moneywashcoord['entrance']
-                local ex = config.moneywashcoord['exit']
-                if k == 'entrance' then
-                    JobZone.Add(ent,'Enter Washroom','renzu_jobs:washroom',false,{'exit'})
-                elseif k == 'exit' then
-                    JobZone.Add(ex,'Enter Washroom','renzu_jobs:washroom',false,{'entrance'})
-                end
-            end
-            for k,v in pairs(config.MoneyWash) do
-                JobZone.Add(vector3(v.coord.x,v.coord.y,v.coord.z),'Wash Money','renzu_jobs:moneywash',false,{k})
-            end
-        end
-    end
-end)
-
 RegisterNetEvent('renzu_jobs:washroom')
 AddEventHandler('renzu_jobs:washroom', function(string)
 	DoScreenFadeOut(500)
@@ -714,6 +678,36 @@ CreateJobThreads = function()
             if k ~= 'max_salary' and v ~= nil and v.coord ~= nil and grade >= v.grade then
                 JobZone.Add(v.coord,v.label,v.event,false,{k})
             end
+        end
+    end
+
+    -- PUBLIC Zones
+
+    for k2,data in pairs(config.Jobs) do
+        if data['public_inventory'] then
+            for k,v in pairs(data['public_inventory']) do
+                JobZone.Add(v.coord,v.label,v.event,false,{k,k2})
+            end
+        end
+        if data['shop'] then
+            for k,v in ipairs(data['shop']) do
+                JobZone.Add(v.coord,v.label,v.event,false,{'shop',k2,v.public,k})
+            end
+        end
+        if data['duty'] then
+            JobZone.Add(data['duty'].coord,data['duty'].label,data['duty'].event,false,{'duty',k2,data['duty'].offdutyname})
+        end
+        for k,v in pairs(config.moneywashcoord) do
+            local ent = config.moneywashcoord['entrance']
+            local ex = config.moneywashcoord['exit']
+            if k == 'entrance' then
+                JobZone.Add(ent,'Enter Washroom','renzu_jobs:washroom',false,{'exit'})
+            elseif k == 'exit' then
+                JobZone.Add(ex,'Enter Washroom','renzu_jobs:washroom',false,{'entrance'})
+            end
+        end
+        for k,v in pairs(config.MoneyWash) do
+            JobZone.Add(vector3(v.coord.x,v.coord.y,v.coord.z),'Wash Money','renzu_jobs:moneywash',false,{k})
         end
     end
 end
