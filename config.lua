@@ -2,14 +2,12 @@ config = {}
 -- MAIN CONFIG
 config.Mysql = 'mysql-async' -- "ghmattisql", "mysql-async", oxmysql
 config.esx = '1.2' -- 1.1 or 1.2 , 1.2 are v1final and esx legacy is compatible
-config.css = 'new' -- new or old -- new = 4 column, old 2 column
 config.logo = 'https://forum.cfx.re/uploads/default/original/4X/b/1/9/b196908c7e5dfcd60aa9dca0020119fa55e184cb.png' -- url of logo
 config.keybinds = 'F6' -- Keybinds
 config.commands = 'interaction'
-config.esx_menu = true -- interaction menu if false, contextual menu
-config.useOxInventory = true -- will disable all built in inventory of renzu_jobs, and will use the ox_inventory data
-config.Oxlib = true -- Ox_lib
-config.renzu_Clothes = false
+config.useOxInventory = true -- https://github.com/overextended/ox_inventory will disable all built in inventory of renzu_jobs, and will use the ox_inventory data
+config.Oxlib = true -- Ox_lib -- https://github.com/overextended/ox_lib
+config.renzu_Clothes = false -- https://github.com/renzuzu/renzu_clothes
 config.RandomAvatars = { -- if player pedshot is not uploaded yet, we will use Initials avatar
     [1] = {background = 'ffffff', color = '308BFF'},
     [2] = {background = 'E2E519', color = '222'},
@@ -30,11 +28,6 @@ config.vehicleimage = 'https://raw.githubusercontent.com/renzuzu/carmap/main/car
 -- vehicleimage can be path ex. img/items, img/vehicle -- you have to mannually upload all to this resource folder or use existing folder from resource ex. https://cfx-nui-RESOURCENAME/html/img/items/
 -- images are configured to set extension as png for items, and jpg for vehicles
 -- if image config is setup incorrectly, default images from github will be use and your custom item will be not showed
-
--- INTERACTION CONFIG
-config.showmarker = true -- show drawmarker to show location point
-config.usePopui = false -- https://github.com/renzuzu/renzu_popui -- if false, will only use drawmarker with floating text and Native isControlPressed
---config.zonemanage = true -- manually trigger the  interaction via Zone management, ex. polyzone -- if this is enable, you wont see any marker without adding the zone to your polyzone
 
 -- WEBHOOK
 config.discordwebhook = true -- enable disable webhook logs to discord
