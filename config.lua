@@ -22,8 +22,8 @@ config.defaultjob = 'unemployed' -- will be use for firing employee
 config.black_money_item = false -- if true you want to use a black_money as item not accounts from ESX
 
 --IMAGE CONFIG
-config.inventory = 'esx_inventoryhud' -- resource name of your inventory script, with image folder
-config.inventoryImageUrl = 'https://cfx-nui-'..config.inventory..'/html/img/items/' -- a path from your inventory image -- verify the path
+config.inventory = 'ox_inventory' -- resource name of your inventory script, with image folder
+config.inventoryImageUrl = 'https://cfx-nui-'..config.inventory..'/web/images/' -- a path from your inventory image -- verify the path
 config.vehicleimage = 'https://raw.githubusercontent.com/renzuzu/carmap/main/carmap/vehicle/' -- URL of vehicle image or path, default git contains local car image and some addon car image
 -- vehicleimage can be path ex. img/items, img/vehicle -- you have to mannually upload all to this resource folder or use existing folder from resource ex. https://cfx-nui-RESOURCENAME/html/img/items/
 -- images are configured to set extension as png for items, and jpg for vehicles
