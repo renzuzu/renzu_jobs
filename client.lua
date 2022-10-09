@@ -656,6 +656,7 @@ end)
 -- JOB INTERACTIONS
 
 CreateJobThreads = function()
+    Wait(1000)
     if PlayerData.job == nil then return end
     for k,v in pairs(JobZone.Spheres) do
         v:remove()
