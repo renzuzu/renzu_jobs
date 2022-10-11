@@ -561,15 +561,16 @@
               <div class="modal-body" style="    margin: 5vh;
               text-align: center;">
               <img style="
-            border-radius: 5%;
-            background: #080808;
-            width: 150px;
-            margin-bottom: 40px;
+              border-radius: 5%;
+              background: #131618;
+              width: 150px;
+              margin-bottom: 20px;
+              box-shadow: 0 0 0 10px #27282a38, 0 0 0 6px #8c929d8a;
             " src="`+imglink+``+id+`.png" onerror="this.src='https://raw.githubusercontent.com/renzuzu/carmap/main/carmap/items/`+id+`.png';this.onerror='defaultimg()'" alt="weapon" class="leaderboard__picture">
                 <form name="weaponcomponents" id="weaponcomponents" style="    width: 95%;
                 background: #1e1e1f21;
-                height: 40vh;
-                overflow: scroll;">
+                height: 45vh;
+                overflow-x: hidden;padding: 0;">
 
                 </form>
               </div>
@@ -592,7 +593,7 @@
                   color: #bbe6ff;
                   font-family: 'Font Awesome 5 Free';border-radius:5px">
                   <input type="radio" name="index" id="`+weapondata[i].components[a].name+`" value="`+weapondata[i].components[a].name+`">
-                  <label for="`+weapondata[i].components[a].name+`" aria-label="`+weapondata[i].components[a].name+`" style="width:90%;">
+                  <label for="`+weapondata[i].components[a].name+`" aria-label="`+weapondata[i].components[a].name+`" style="width:90%; grid-template-columns: 20px auto;">
                   <span style="border: none;
                   background: none;"><i id="`+weapondata[i].components[a].name+`_check" class="fas fa-square" style="font-size:30px; color:grey;"></i></span>
 
@@ -600,7 +601,7 @@
 
                   <div class="job job--white job--sm" style="background-image: url(`+imglink+``+weapondata[i].components[a].name+`.png);
                   background-size: 100% 100%;
-                  background-repeat: no-repeat;">
+                  background-repeat: no-repeat;    display: none;">
                   </div>
                   </label>
                   </div>`
