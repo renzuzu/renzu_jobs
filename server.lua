@@ -34,25 +34,6 @@ CreateThread(function()
             })
         end
     end
-    if config.useSociety then
-        for k,v in pairs(config.Jobs) do
-            TriggerEvent("esx_addonaccount:getSharedAccount","society_"..k,function(account)
-                local result = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs WHERE name = @name', {['@name'] = k})
-                if result[1] and account.money > 0 then
-                    local account = account
-                    local jobaccount = json.decode(result[1].accounts) or {}
-                    jobaccount['money'] = jobaccount['money'] + account.money -- transfer
-                    SqlFunc(config.Mysql,'execute','UPDATE renzu_jobs SET accounts = @accounts WHERE name = @name', {
-                        ['@name'] = name,
-                        ['@accounts'] = json.encode(jobaccount)
-                    })
-                    account.removeMoney(account.money)
-                else
-                    print(account.money,'transfer already done from society account to renzu_jobs')
-                end
-            end)
-        end
-    end
     loaded = true
     print("Renzu Jobs LOADED")
 end)
@@ -1033,16 +1014,13 @@ lib.callback.register('renzu_jobs:returnvehicle', function(source, plate)
     end
 end)
 
-RegisterNetEvent('renzu_jobs:updatejob')
-AddEventHandler('renzu_jobs:updatejob', function(job)
+RegisterNetEvent('renzu_jobs:updatejob', function(job)
     local source = source
     local xPlayer    = GetPlayerFromId(source)
-    
     UpdateJob(xPlayer.identifier, xPlayer.job.name, tonumber(xPlayer.job.grade))
 end)
 
-RegisterNetEvent('renzu_jobs:duty')
-AddEventHandler('renzu_jobs:duty', function(job,state)
+RegisterNetEvent('renzu_jobs:duty', function(job,state)
     local source = source
     local xPlayer    = GetPlayerFromId(source)
     local grade = xPlayer.job.grade

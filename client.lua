@@ -20,8 +20,7 @@ Citizen.CreateThread(function()
     CreateJobThreads()
 end)
 
-RegisterNetEvent('esx:setJob')
-AddEventHandler('esx:setJob', function(job)
+RegisterNetEvent('esx:setJob', function(job)
 	PlayerData.job = job
     TriggerServerEvent('renzu_jobs:updatejob',PlayerData)
     if config.Oxlib then
@@ -32,8 +31,7 @@ AddEventHandler('esx:setJob', function(job)
     setjob = false
 end)
 
-RegisterNetEvent('esx:playerLoaded')
-AddEventHandler('esx:playerLoaded', function(xPlayer)
+RegisterNetEvent('esx:playerLoaded', function(xPlayer)
     PlayerData = xPlayer
     playerloaded = true
     if config.Oxlib then
@@ -132,13 +130,11 @@ function OpenWeaponMenu()
     end)
 end
 
-RegisterNetEvent('renzu_jobs:openweapons')
-AddEventHandler('renzu_jobs:openweapons', function(job)
+RegisterNetEvent('renzu_jobs:openweapons', function(job)
 	OpenWeaponMenu()
 end)
 
-RegisterNetEvent('renzu_jobs:opengarage')
-AddEventHandler('renzu_jobs:opengarage', function(job)
+RegisterNetEvent('renzu_jobs:opengarage', function(job)
     if IsPedInAnyVehicle(cache.ped) then
         local vehicle = GetVehiclePedIsIn(cache.ped)
         local plate = GetVehicleNumberPlateText(vehicle)
@@ -195,8 +191,7 @@ function OpenGarage()
     end)
 end
 
-RegisterNetEvent('renzu_jobs:openvehicleshop')
-AddEventHandler('renzu_jobs:openvehicleshop', function()
+RegisterNetEvent('renzu_jobs:openvehicleshop', function()
     OpenVehicleShop()
 end)
 
@@ -318,8 +313,7 @@ end)
 
 
 
-RegisterNetEvent('renzu_jobs:openshop')
-AddEventHandler('renzu_jobs:openshop', function(shop,job,public,shopindex)
+RegisterNetEvent('renzu_jobs:openshop', function(shop,job,public,shopindex)
 	OpenShop(shop,job,public,shopindex)
 end)
 
@@ -479,22 +473,19 @@ RegisterNUICallback('withdraw_deposit', function(data, cb)
     end,type,amount,money_type)
 end)
 
-RegisterNetEvent('renzu_jobs:updatemoney')
-AddEventHandler('renzu_jobs:updatemoney', function(data)
+RegisterNetEvent('renzu_jobs:updatemoney', function(data)
     SendNUIMessage({
         type  = 'update',
         data = data
     })
 end)
 
-RegisterNetEvent('renzu_jobs:openinventory')
-AddEventHandler('renzu_jobs:openinventory', function(type)
+RegisterNetEvent('renzu_jobs:openinventory', function(type)
     local job = PlayerData.job.name
     OpenInventory(job,type)
 end)
 
-RegisterNetEvent('renzu_jobs:openbossmenu')
-AddEventHandler('renzu_jobs:openbossmenu', function()
+RegisterNetEvent('renzu_jobs:openbossmenu', function()
     local grade = PlayerData.job.grade
     OpenBossMenu(grade)
 end)
@@ -506,8 +497,7 @@ RegisterNUICallback('setjob', function(data, cb)
     close()
 end)
 
-RegisterNetEvent('renzu_jobs:opencrafting')
-AddEventHandler('renzu_jobs:opencrafting', function(type)
+RegisterNetEvent('renzu_jobs:opencrafting', function(type)
     local job = PlayerData.job.name
     OpenCrafting(job)
 end)
@@ -529,8 +519,7 @@ RegisterNUICallback('craftitem', function(data, cb)
     end,data.item,data.amount,data.type)
 end)
 
-RegisterNetEvent('renzu_jobs:duty')
-AddEventHandler('renzu_jobs:duty', function(name,job,offduty)
+RegisterNetEvent('renzu_jobs:duty', function(name,job,offduty)
     if job == PlayerData.job.name or PlayerData.job.name == offduty then
         OpenDuty(job,offduty)
     end
@@ -596,8 +585,7 @@ JobZone.Add = function(coord,msg,event,server,var,job)
     table.insert(JobZone.Spheres,sphere)
 end
 
-RegisterNetEvent('renzu_jobs:washroom')
-AddEventHandler('renzu_jobs:washroom', function(string)
+RegisterNetEvent('renzu_jobs:washroom', function(string)
 	DoScreenFadeOut(500)
     print(string,'gago')
     Wait(1000)
@@ -607,8 +595,7 @@ AddEventHandler('renzu_jobs:washroom', function(string)
     DoScreenFadeIn(500)
 end)
 
-RegisterNetEvent('renzu_jobs:moneywash')
-AddEventHandler('renzu_jobs:moneywash', function(id)
+RegisterNetEvent('renzu_jobs:moneywash', function(id)
     currentwash = id
     if not config.MoneyWash[id].inuse then
         lib.callback("renzu_jobs:getBlackMoney", false, function(blackmoney)
@@ -638,8 +625,7 @@ RegisterNUICallback('moneywash', function(data, cb)
     end,data.amount,currentwash)
 end)
 
-RegisterNetEvent('renzu_jobs:washuse')
-AddEventHandler('renzu_jobs:washuse', function(id, bool)
+RegisterNetEvent('renzu_jobs:washuse', function(id, bool)
     config.MoneyWash[id].inuse = bool
     if bool then
         Citizen.CreateThread(function()
@@ -713,8 +699,7 @@ CreateJobThreads = function()
     end
 end
 
-RegisterNetEvent('renzu_jobs:openwardrobe')
-AddEventHandler('renzu_jobs:openwardrobe', function(job)
+RegisterNetEvent('renzu_jobs:openwardrobe', function(job)
     if config.renzu_Clothes then
         exports.renzu_clothes:OpenClotheInventory()
     else

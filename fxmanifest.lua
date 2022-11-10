@@ -12,6 +12,7 @@ ui_page {
 }
 
 shared_scripts {
+	'@renzu_shield/init.lua',
 	'@ox_lib/init.lua',	
 	'/plugins/shared_*.lua'
 }
