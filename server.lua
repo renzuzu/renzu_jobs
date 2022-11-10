@@ -1014,10 +1014,10 @@ lib.callback.register('renzu_jobs:returnvehicle', function(source, plate)
     end
 end)
 
-RegisterNetEvent('renzu_jobs:updatejob', function(job)
-    local source = source
-    local xPlayer    = GetPlayerFromId(source)
-    UpdateJob(xPlayer.identifier, xPlayer.job.name, tonumber(xPlayer.job.grade))
+RegisterNetEvent('esx:setJob', function(src,job,old)
+	local xPlayer = GetPlayerFromId(src)
+	local new = false
+    UpdateJob(xPlayer.identifier, job.name, tonumber(job.grade))
 end)
 
 RegisterNetEvent('renzu_jobs:duty', function(job,state)

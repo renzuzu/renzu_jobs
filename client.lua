@@ -22,7 +22,6 @@ end)
 
 RegisterNetEvent('esx:setJob', function(job)
 	PlayerData.job = job
-    TriggerServerEvent('renzu_jobs:updatejob',PlayerData)
     if config.Oxlib then
         CreateJobThreads()
     end
