@@ -401,14 +401,14 @@ lib.callback.register('renzu_jobs:sendbonus',function(source, identifier, amount
             if tonumber(amount) > 0 and JobMoney(xPlayer.job.name).money >= tonumber(amount) then
                 removeMoney(tonumber(amount),xPlayer.job.name,source,'money')
                 toPlayer.addMoney(tonumber(amount))
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You give $'..tonumber(amount)..' to '..toPlayer.name)
-                TriggerClientEvent('renzu_notify:Notify',toPlayer.source,'success','Job', 'You Receive $'..tonumber(amount)..' Bonus from '..xPlayer.job.grade_label..' '..xPlayer.name..'')
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You give $'..tonumber(amount)..' to '..toPlayer.name)
+                TriggerClientEvent('renzu_jobs:notify',toPlayer.source,'success','Job', 'You Receive $'..tonumber(amount)..' Bonus from '..xPlayer.job.grade_label..' '..xPlayer.name..'')
                 if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                     SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Send',amount,toPlayer.name))
                 end
                 return cb(true)
             else
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough money in stock')
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Not enough money in stock')
             end
         else
             
@@ -420,18 +420,18 @@ lib.callback.register('renzu_jobs:sendbonus',function(source, identifier, amount
                         name = v.firstname
                     end
                 end
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You give $'..tonumber(amount)..' to '..name)
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You give $'..tonumber(amount)..' to '..name)
                 addMoneyOffline(identifier,tonumber(amount))
                 if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                     SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Send',amount,name))
                 end
                 return cb(true)
             else
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough money in stock')
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Not enough money in stock')
             end
         end
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have access')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have access')
         return cb(false)
     end
 end)
@@ -471,15 +471,15 @@ lib.callback.register('renzu_jobs:changesalary', function (source, grade, amount
                 if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                     SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Salary Change',amount,config.Jobs[xPlayer.job.name]['grade'][tonumber(grade)].label))
                 end
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You successfully change the salary')
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You successfully change the salary')
                 return cb(true)
             end)
         else
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Over Budget for Salary Amount')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Over Budget for Salary Amount')
             return cb(false)
         end
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have access')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have access')
         return cb(false)
     end
 end)
@@ -528,16 +528,16 @@ lib.callback.register('renzu_jobs:buyitem',function(source, item, amount, job, s
                 xPlayer.addWeapon(item, 100)
                 SetPedAmmo(GetPlayerPed(source),GetHashKey(item),100)
             end
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You Bought '..label)
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You Bought '..label)
             if config.Jobs[xPlayer.job.name]['shop'][shopindex].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['shop'][shopindex].webhook,16711680,config.Jobs[xPlayer.job.name]['shop'][shopindex].label,DiscordMessage(xPlayer,'Buy item',label..' '..amount,' '))
             end
             return cb(true)
         elseif not Cancarry(xPlayer,item,tonumber(amount)) and found then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have inventory space')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have inventory space')
             return cb(false)
         elseif found then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have enough money')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have enough money')
             return cb(false)
         else
             -- item is not register to config (EXPLOITING?)
@@ -545,7 +545,7 @@ lib.callback.register('renzu_jobs:buyitem',function(source, item, amount, job, s
             return cb(false)
         end
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have access')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have access')
         return cb(false)
     end
 end)
@@ -563,14 +563,14 @@ lib.callback.register('renzu_jobs:withdraw_deposit',function(source, type, amoun
             else
                 xPlayer.addAccountMoney(money_type, tonumber(amount))
             end
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You Withdraw '..amount..' from '..xPlayer.job.name..' money')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You Withdraw '..amount..' from '..xPlayer.job.name..' money')
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Withdraw',amount,money_type))
             end
         elseif type == 0 and wperm then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'not enough money in stock')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'not enough money in stock')
         elseif type == 0 then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'No permission')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'No permission')
         end
         
         local esxold = false
@@ -587,14 +587,14 @@ lib.callback.register('renzu_jobs:withdraw_deposit',function(source, type, amoun
             else
                 xPlayer.removeAccountMoney(money_type, tonumber(amount))
             end
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You Deposit '..amount..' from '..xPlayer.job.name..' money')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You Deposit '..amount..' from '..xPlayer.job.name..' money')
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Deposit',amount,money_type))
             end
         elseif type == 1 and dperm then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have enough money')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have enough money')
         elseif type == 1 then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'No permission')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'No permission')
         end
     end
 end)
@@ -614,8 +614,8 @@ lib.callback.register('renzu_jobs:setjob',function(source, grade, identifier)
             toPlayer.setJob(xPlayer.job.name, tonumber(grade))
             playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,name,firstname,lastname FROM users', {})
             Wait(100)
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You '..text..' '..toPlayer.name..' as a '..xPlayer.job.grade_label)
-            TriggerClientEvent('renzu_notify:Notify',toPlayer.source,notify,'Job', 'You have been '..text..' by '..xPlayer.name..' to '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label)
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You '..text..' '..toPlayer.name..' as a '..xPlayer.job.grade_label)
+            TriggerClientEvent('renzu_jobs:notify',toPlayer.source,notify,'Job', 'You have been '..text..' by '..xPlayer.name..' to '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label)
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,text,'',xPlayer.name..' to '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label))
             end
@@ -642,7 +642,7 @@ lib.callback.register('renzu_jobs:setjob',function(source, grade, identifier)
                 notify = 'warning'
             end
             
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You '..text..' '..name..' as a '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label)
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You '..text..' '..name..' as a '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label)
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,text,'',name..' to '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label))
             end
@@ -650,7 +650,7 @@ lib.callback.register('renzu_jobs:setjob',function(source, grade, identifier)
         end
         
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have access')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have access')
         return cb(false)
     end
 end)
@@ -661,8 +661,8 @@ lib.callback.register('renzu_jobs:kick',function(source, identifier)
     if config.Jobs[xPlayer.job.name] ~= nil and config.Jobs[xPlayer.job.name].grade[xPlayer.job.grade]['access'].fire then
         local toPlayer = GetPlayerFromIdentifier(identifier)
         if toPlayer then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You Kicked '..toPlayer.name..' from '..xPlayer.job.label)
-            TriggerClientEvent('renzu_notify:Notify',toPlayer.source,'info','Job', 'You have been fired by '..xPlayer.name..' from '..xPlayer.job.label)
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You Kicked '..toPlayer.name..' from '..xPlayer.job.label)
+            TriggerClientEvent('renzu_jobs:notify',toPlayer.source,'info','Job', 'You have been fired by '..xPlayer.name..' from '..xPlayer.job.label)
             toPlayer.setJob(config.defaultjob, 0)
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Fired','',toPlayer.name))
@@ -678,7 +678,7 @@ lib.callback.register('renzu_jobs:kick',function(source, identifier)
                 end
             end
             UpdateJob(identifier, config.defaultjob, 0)
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You Kicked '..name..' from '..config.Jobs[xPlayer.job.name].grade[tonumber(jobgrade)].label)
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You Kicked '..name..' from '..config.Jobs[xPlayer.job.name].grade[tonumber(jobgrade)].label)
             if config.Jobs[xPlayer.job.name]['bossmenu'].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['bossmenu'].webhook,16711680,'boss menu',DiscordMessage(xPlayer,'Fired','',name))
             end
@@ -686,7 +686,7 @@ lib.callback.register('renzu_jobs:kick',function(source, identifier)
         end
         
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have access')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have access')
         return cb(false)
     end
 end)
@@ -716,13 +716,13 @@ lib.callback.register('renzu_jobs:itemfunc', function(source, type, amount, item
                 xPlayer.removeAccountMoney('black_money',tonumber(amount))
             end
             callback = true
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You deposit '..label..' x'..amount)
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You deposit '..label..' x'..amount)
             if config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook,16711680,'Inventory',DiscordMessage(xPlayer,'Deposit Item',label..' x'..amount,inv_type..' Inventory'))
             end
             return cb(callback)
         elseif type == 1 then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have enough')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have enough')
             return cb(callback)
         end
         if not isweapon and type == 0 and tonumber(amount) > 0 and GetItems(xPlayer.job.name,inv_type,xPlayer)[slot][item] >= amount 
@@ -751,7 +751,7 @@ lib.callback.register('renzu_jobs:itemfunc', function(source, type, amount, item
                     xPlayer.addInventoryItem(item, tonumber(amount))
                     callback = true
                 else
-                    TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough inventory space')
+                    TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Not enough inventory space')
                     callback = false
                     return
                 end
@@ -762,19 +762,19 @@ lib.callback.register('renzu_jobs:itemfunc', function(source, type, amount, item
             end
             if callback then
                 removeItem(xPlayer.job.name,item,amount,source,inv_type,xPlayer,slot)
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'You withdraw '..label..' x'..amount)
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You withdraw '..label..' x'..amount)
             end
             if config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook then
                 SendtoDiscord(config.Jobs[xPlayer.job.name]['inventory'][inv_type].webhook,16711680,'Inventory',DiscordMessage(xPlayer,'Withdraw Item',label..' x'..amount,inv_type..' Inventory'))
             end
             return cb(callback)
         elseif type == 0 then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough stock')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Not enough stock')
             return cb(callback)
         end
         
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have a permission to access')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have a permission to access')
         return cb(callback)
     end
 end)
@@ -812,7 +812,7 @@ lib.callback.register('renzu_jobs:craftitem', function(source, item, amount, typ
     local isweapon = string.find(item:upper(), "WEAPON_")
     local callback = false
     if isweapon and tonumber(amount) > 1 then
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You can only craft weapons one at a time')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You can only craft weapons one at a time')
     elseif ongoingcrafting[source] == nil then
         if conf ~= nil then
             local notenoughcabron = false
@@ -825,7 +825,7 @@ lib.callback.register('renzu_jobs:craftitem', function(source, item, amount, typ
                 end
             end
             if notenoughcabron then
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough requirement')
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Not enough requirement')
             elseif Cancarry(xPlayer,item,tonumber(amount)) then
                 callback = true
                 ongoingcrafting[source] = true
@@ -851,7 +851,7 @@ lib.callback.register('renzu_jobs:craftitem', function(source, item, amount, typ
                     effect = 'slide', -- The animation effect when adding or removing notification elements. Accepted values: fade or slide.
                     easing = 'ease-in-out', -- linear, ease, ease-in, ease-out, ease-in-out or a custom cubic-bezier value.
                 }
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'default','Crafting Table', 'in Progress Please Wait ', option)
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'default','Crafting Table', 'in Progress Please Wait ', option)
                 Wait(conf.seconds * tonumber(amount) * 1000)
                 if isweapon then
                     xPlayer.addWeapon(item, 0)
@@ -873,20 +873,20 @@ lib.callback.register('renzu_jobs:craftitem', function(source, item, amount, typ
                     FreezeEntityPosition(GetPlayerPed(source),false)
                     return
                 end)
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Crafting Table', 'Successfully Crafted a '..item, option)
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Crafting Table', 'Successfully Crafted a '..item, option)
                 if config.Jobs[xPlayer.job.name]['crafting'].webhook then
                     SendtoDiscord(config.Jobs[xPlayer.job.name]['crafting'].webhook,16711680,config.Jobs[xPlayer.job.name]['crafting'].label,DiscordMessage(xPlayer,'Craft a item ',item..' x'..amount,' '))
                 end
             elseif not Cancarry(xPlayer,item,tonumber(amount)) then
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Not enough inventory space')
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Not enough inventory space')
                 callback = false
                 return
             end
         else
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Crafting Table', 'item not exist in this crafting table')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Crafting Table', 'item not exist in this crafting table')
         end
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'warning','Crafting Table', 'Ongoing crafting..')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'warning','Crafting Table', 'Ongoing crafting..')
     end
 end)
 
@@ -965,10 +965,10 @@ lib.callback.register('renzu_jobs:takeoutvehicle', function(source, plate)
             ['@plate'] = plate,
             ['@stored'] = 0,
         })
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Successfully take out a vehicle')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'Successfully take out a vehicle')
         return cb(true)
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont owned the vehicle')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont owned the vehicle')
         return cb(false)
     end
 end)
@@ -1002,10 +1002,10 @@ lib.callback.register('renzu_jobs:storevehicle', function(source, plate, prop)
                 ['@garage'] = json.encode(vehicles),
             })
         end
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Successfully Store a vehicle')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'Successfully Store a vehicle')
         return cb(true)
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont owned the vehicle')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont owned the vehicle')
         return cb(false)
     end
 end)
@@ -1017,7 +1017,7 @@ lib.callback.register('renzu_jobs:returnvehicle', function(source, plate)
         xPlayer.removeMoney(500)
         return cb(true)
     else
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have enough money to pay valet')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have enough money to pay valet')
         return cb(false)
     end
 end)
@@ -1040,7 +1040,7 @@ RegisterNetEvent('renzu_jobs:duty', function(job,state)
     end
     xPlayer.setJob(job, grade)
     Wait(500)
-    TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Successfully '..text)
+    TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'Successfully '..text)
     UpdateJob(xPlayer.identifier, job, grade)
 end)
 
@@ -1130,17 +1130,17 @@ lib.callback.register('renzu_jobs:buyvehicle', function(source, model)
                         ['@name'] = xPlayer.job.name,
                         ['@garage'] = json.encode(vehicles),
                     })
-                    TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Successfully Bought a Vehicle - Check your Garage')
+                    TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'Successfully Bought a Vehicle - Check your Garage')
                     if config.Jobs[xPlayer.job.name]['vehicleshop'].webhook then
                         SendtoDiscord(config.Jobs[xPlayer.job.name]['vehicleshop'].webhook,16711680,config.Jobs[xPlayer.job.name]['vehicleshop'].label,DiscordMessage(xPlayer,'Buy Vehicle',model,' '))
                     end
                     return cb(true)
                 else
-                    TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have enough money')
+                    TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have enough money')
                     return cb(false)
                 end
             else
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'You dont have a permmision to buy this vehicle')
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'You dont have a permmision to buy this vehicle')
                 return cb(false)
             end
             break
@@ -1163,7 +1163,7 @@ lib.callback.register('renzu_jobs:washmoney', function(source, amount, id)
         return
     end
     if xPlayer.getAccount('black_money').money < tonumber(amount) then
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'warning','Job', 'Black money onhand is insufficient')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'warning','Job', 'Black money onhand is insufficient')
         return cb('notenough')
     end
     if not config.MoneyWash[id].inuse then
@@ -1182,12 +1182,12 @@ lib.callback.register('renzu_jobs:washmoney', function(source, amount, id)
                 xPlayer.addMoney(money)
                 addMoney(tonumber(tax),config.MoneyWashOwner,src,'money')
                 print('sending washed money',money)
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Money is Successfuly Washed')
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'Money is Successfuly Washed')
             else
                 local money = Round(tonumber(amount) * (1-config.MoneyWashTax))
                 addMoney(tonumber(money),config.MoneyWashOwner,src,'money')
                 TriggerClientEvent('renzu_jobs:washuse',-1, id,config.MoneyWash[id].inuse)
-                TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Money is Successfuly Washed and someone took it')
+                TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Money is Successfuly Washed and someone took it')
             end
         end)
         Wait(1000)
@@ -1320,11 +1320,11 @@ RegisterCommand('job', function(source,args)
                 ['@label']   = args[3],
                 ['@whitelisted'] = args[4] or 0
             })
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Job '..args[2]..' '..args[3]..' has been added')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'Job '..args[2]..' '..args[3]..' has been added')
         elseif args[1] == 'add' and args[2] == nil then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Job name is not defined! - example usage: /job add police Police 1')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Job name is not defined! - example usage: /job add police Police 1')
         elseif args[1] == 'add' and args[2] ~= nil and args[3] == nil then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', 'Job Label is not defined! - example usage: /job add police Police 1')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Job Label is not defined! - example usage: /job add police Police 1')
         elseif args[1] == 'grade' and args[2] ~= nil and args[3] ~= nil and args[4] ~= nil then
             SqlFunc(config.Mysql,'execute','INSERT INTO job_grades (job_name, grade, name, label) VALUES (@job_name, @grade, @name, @label)', {
                 ['@job_name']   = args[2],
@@ -1332,15 +1332,15 @@ RegisterCommand('job', function(source,args)
                 ['@name'] = string.gsub(args[4], "%s+", ""):lower(),
                 ['@label'] = args[4],
             })
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'Job Grade '..args[3]..' ('..args[4]..') has been added to '..args[2])
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'Job Grade '..args[3]..' ('..args[4]..') has been added to '..args[2])
         elseif args[1] == 'grade' and args[2] == nil then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', '(string) Job name is not defined! - example usage: /job grade police 1 Officer')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', '(string) Job name is not defined! - example usage: /job grade police 1 Officer')
         elseif args[1] == 'grade' and args[2] ~= nil and args[3] == nil then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', '(int) Job grade is not defined! - example usage: /job grade police 1 Officer')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', '(int) Job grade is not defined! - example usage: /job grade police 1 Officer')
         elseif args[1] == 'grade' and args[2] ~= nil and args[3] ~= nil and args[4] == nil then
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'error','Job', '(string) Job Label is not defined! - example usage: /job grade police 1 Officer')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', '(string) Job Label is not defined! - example usage: /job grade police 1 Officer')
         else
-            TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'info','Job', 'Job adder example:<br> /job add police Police 1 <br> Job grade adder example usage: <br>/job grade police 1 Officer')
+            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'info','Job', 'Job adder example:<br> /job add police Police 1 <br> Job grade adder example usage: <br>/job grade police 1 Officer')
         end
     end
 end, false)
@@ -1372,7 +1372,7 @@ RegisterCommand('jobrefresh', function(source,args)
         end
         ESX.Jobs = Jobs
         TriggerEvent('esx:updatejobs',source,Jobs)
-        TriggerClientEvent('renzu_notify:Notify',xPlayer.source,'success','Job', 'ESX Jobs Has been Refreshed')
+        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'ESX Jobs Has been Refreshed')
     end
 end)
 

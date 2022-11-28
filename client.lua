@@ -610,14 +610,14 @@ end)
 RegisterNUICallback('moneywash', function(data, cb)
     lib.callback("renzu_jobs:washmoney", false, function(a)
         if a == true then
-            TriggerEvent('renzu_notify:Notify', 'info','Customs', 'Money is being Washed')
+            TriggerEvent('renzu_jobs:notify', 'info','Customs', 'Money is being Washed')
             SetNuiFocus(false,false)
             cb(a)
         elseif a == 'notenough' then
             SetNuiFocus(true,true)
             cb(false)
         else
-            TriggerEvent('renzu_notify:Notify', 'error','Customs', 'Machine already in use')
+            TriggerEvent('renzu_jobs:notify', 'error','Customs', 'Machine already in use')
             SetNuiFocus(false,false)
             cb(a)
         end
@@ -1101,4 +1101,13 @@ Citizen.CreateThread(function()
     RegisterCommand(config.commands, function(source, args, rawCommand)
         OxMenuInteraction()
     end)
+end)
+
+RegisterNetEvent('renzu_jobs:notify',function(type,title,message)
+    local type = type and type:gsub('default', 'inform') or 'inform'
+    lib.notify({
+        title = title,
+        description = message,
+        type = type
+    })
 end)
