@@ -35,6 +35,14 @@ CreateThread(function()
         end
     end
     loaded = true
+    Citizen.CreateThreadNow(function()
+        if config.Mysql == 'oxmysql' then
+            local success, result = pcall(MySQL.scalar.await,'SELECT `name` FROM `users`') -- check if job column is exist
+            if not success then
+                SqlFunc(config.Mysql,'execute','ALTER TABLE `users` ADD COLUMN `name` VARCHAR(32) NULL') -- add job column
+            end
+        end
+	end)
     print("Renzu Jobs LOADED")
 end)
 
