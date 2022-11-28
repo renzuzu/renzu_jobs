@@ -17,3 +17,5 @@ CREATE TABLE IF NOT EXISTS `saveclothes` (
 COLLATE='utf8mb4_general_ci'
 ENGINE=InnoDB
 ;
+
+ALTER TABLE `users` ADD COLUMN `name` VARCHAR(32) NULL;
