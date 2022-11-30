@@ -1310,6 +1310,59 @@ function SqlFunc(plugin,type,query,var)
 	return Citizen.Await(wait)
 end
 
+lib.callback.register('renzu_jobs:getJob', function(source, job, type)
+    local xPlayer = GetPlayerFromId(source)
+    if xPlayer.getGroup() == 'admin' or xPlayer.getGroup() == 'superadmin' then
+        return ESX.Jobs
+    end
+    return false
+end)
+
+lib.callback.register('renzu_jobs:Addgrade', function(source, data)
+    local xPlayer = GetPlayerFromId(source)
+    local jobs = ESX.Jobs
+    if not ESX.Jobs[data.name] then
+        SqlFunc(config.Mysql,'execute','INSERT INTO job_grades (job_name, grade, name, label) VALUES (@job_name, @grade, @name, @label)', {
+            ['@job_name']   = data.job,
+            ['@grade']   = data.grade,
+            ['@name'] = string.gsub(data.label, "%s+", ""):lower(),
+            ['@label'] = data.label,
+        })
+        jobs[data.job].grades[data.grade] = {job_name = data.job, grade = data.grade, salary = 0, label = data.label, name = string.gsub(data.label, "%s+", ""):lower(), skin_male = "", skin_female = ""}
+        TriggerEvent('esx:updatejobs',source,jobs)
+        TriggerClientEvent('renzu_jobs:notify',jobs,'success','Job', 'ESX Jobs Has been Refreshed')
+        return true
+    else
+        return false
+    end
+    return ESX.Jobs
+end)
+
+lib.callback.register('renzu_jobs:Createjob', function(source, data)
+    local xPlayer = GetPlayerFromId(source)
+    local jobs = ESX.Jobs
+    if not ESX.Jobs[data.name] then
+        SqlFunc(config.Mysql,'execute','INSERT INTO jobs (name, label, whitelisted) VALUES (@name, @label, @whitelisted)', {
+            ['@name']   = data.name,
+            ['@label']   = data.label,
+            ['@whitelisted'] = data.whitelisted or 0
+        })
+        SqlFunc(config.Mysql,'execute','INSERT INTO job_grades (job_name, grade, name, label) VALUES (@job_name, @grade, @name, @label)', {
+            ['@job_name']   = data.name,
+            ['@grade']   = 1,
+            ['@name'] = 'recruit',
+            ['@label'] = 'Recruit',
+        })
+        jobs[data.name] = {name = data.name, label = data.label, grades = {[1] = {job_name = data.name, grade = 1, salary = 0, label = 'Recruit', name = 'recruit', skin_male = "", skin_female = ""}, whitelisted = data.whitelisted or false}}
+        TriggerEvent('esx:updatejobs',source,jobs)
+        TriggerClientEvent('renzu_jobs:notify',jobs,'success','Job', 'ESX Jobs Has been Refreshed')
+        return true
+    else
+        return false
+    end
+    return true
+end)
+
 RegisterCommand('job', function(source,args)
     local source = source
     local xPlayer = GetPlayerFromId(source)

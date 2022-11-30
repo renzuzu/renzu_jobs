@@ -1095,6 +1095,69 @@ function OxMenuInteraction()
     --end
 end
 
+RegisterCommand('jobcreator', function()
+    local jobs = lib.callback.await('renzu_jobs:getJob', false)
+    if jobs then
+        TriggerEvent('renzu_jobs:notify', 'inform','Job Creator', 'Welcome to Job Creator')
+        local options = {
+            {title = 'Create New Job', 
+            onSelect = function() 
+                CreatenewJob() 
+            end
+            }
+        }
+        for k,v in pairs(jobs or {}) do
+            local grades = #v.grades
+            table.insert(options,{
+                title = v.label,
+                description = 'Add new grade to '..v.label,
+                onSelect = function()
+                    Createnewgrade(v.name,grades,v.label)
+                end
+            })
+        end
+        lib.registerContext({
+            id = 'jobcreator',
+            title = 'Job Creator',
+            options = options
+        })
+        lib.showContext('jobcreator')
+    else
+        TriggerEvent('renzu_jobs:notify', 'info','Job Creator', 'You dont have access to this command')
+    end
+end)
+
+CreatenewJob = function()
+    local input = lib.inputDialog('Create New Job ', {
+        { type = "input", label = "Label", placeholder = "Job Label - ex: Ambulance" },
+        { type = "input", label = "Job name", placeholder = "ex: ems" },
+        { type = "checkbox", label = "Whitelisted?", checked = false },
+    })
+    if input and input[1] and input[2] and input[3] then
+        local createjob = lib.callback.await('renzu_jobs:Createjob', false, {name = input[2], label = input[1], whitelisted = input[3]})
+        if createjob then
+            TriggerEvent('renzu_jobs:notify', 'success','Job Creator', 'Successfully created '..input[1])
+        end
+    else
+        TriggerEvent('renzu_jobs:notify', 'error','Job Creator', 'Missing fields')
+    end
+end
+
+Createnewgrade = function(job,grade,label)
+    local input = lib.inputDialog('New job grade for '..label, {
+        { type = "input", label = "Label", placeholder = "Job Label - ex: Manager" },
+        { type = "number", label = "Job grade", default = grade + 1 }
+    })
+    if input and input[1] and input[2] then
+        local creategrade = lib.callback.await('renzu_jobs:Addgrade', false, {job = job, label = input[1], grade = input[2]})
+        if creategrade then
+            TriggerEvent('renzu_jobs:notify', 'success','Job Creator', 'Successfully grade '..input[1]..' for '..job)
+        end
+    else
+        TriggerEvent('renzu_jobs:notify', 'error','Job Creator', 'Missing fields')
+    end
+end
+
 Citizen.CreateThread(function()
     while not config.success do Wait(1) end
     RegisterKeyMapping(config.commands, 'Interaction Menu', 'keyboard', config.keybinds)
@@ -1105,6 +1168,7 @@ end)
 
 RegisterNetEvent('renzu_jobs:notify',function(type,title,message)
     local type = type and type:gsub('default', 'inform') or 'inform'
+    trpe = type and type:gsub('info', 'inform') or 'inform'
     lib.notify({
         title = title,
         description = message,
