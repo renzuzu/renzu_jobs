@@ -94,22 +94,10 @@ config.inventoryImageUrl = 'https://cfx-nui-'..config.inventory..'/html/img/item
 
 # Commands
 - Job Creator
-```
-- (Add new job)
-/job add police Police 1
-/job grade police 0 Cadet
-```
-- Parameters:
+- Command: /jobcreator
+![image](https://user-images.githubusercontent.com/82306584/204890182-14deee04-fca0-4d98-bb4e-946831c5488c.png)
+![image](https://user-images.githubusercontent.com/82306584/204890268-202e9596-92eb-406f-93e1-e41c378606b3.png)
 
-| 1st     | 2nd | 3rd | 4th |
-| --- | --- | --- | --- |
-| add  | jobname (string) | Label (string) | Whitelisted? (int) |
-| grade     |   jobname (string)   | grade (int) | Label (string) |
-
-- Job Refresher (need to edit ESX files)
-```
-/jobrefresh
-```
 - in able to use newly added jobs from jobs creator command, you need to trigger the command to refresh the job list of ESX.Jobs
 
 - files needed to Edit ( es_extended/server/main.lua )
