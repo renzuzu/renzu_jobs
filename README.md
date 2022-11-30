@@ -62,13 +62,13 @@ FIVEM - renzu_jobs - Basic Jobs Utility Needs for Roleplay Gameplay
 - Society Money (ESX Society) data can be grab once to transfer it to renzu_jobs database.
 - PopUI can be used disable by default
 
-# Job Money Data
+# Job Money Exports
 ```
   local money = 0
-  ESX.TriggerServerCallback("renzu_jobs:getJobmoney",function(money)
-      money = money
-  end,'police', 'money')
-  - first var is job , second var is type ex. black_money, money
+  exports.renzu_job:JobMoney('police') -- return job money
+  exports.renzu_job:addMoney(10000,'police',source,'money,true) -- add job money
+  exports.renzu_job:removeMoney(10000,'police',source,'money',true,paycheck) -- remove job money @paycheck : true or false
+
 ```
 
 # Inventory Image CONFIG
