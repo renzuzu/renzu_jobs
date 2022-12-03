@@ -12,7 +12,7 @@ end)
 CreateThread(function()
     Wait(200)
     local registeredjobs = {}
-    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,name,firstname,lastname FROM users', {})
+    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,firstname,lastname FROM users', {})
     jobsclass = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
     existing = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs', {})
     
@@ -35,14 +35,6 @@ CreateThread(function()
         end
     end
     loaded = true
-    Citizen.CreateThreadNow(function()
-        if config.Mysql == 'oxmysql' then
-            local success, result = pcall(MySQL.scalar.await,'SELECT `name` FROM `users`') -- check if job column is exist
-            if not success then
-                SqlFunc(config.Mysql,'execute','ALTER TABLE `users` ADD COLUMN `name` VARCHAR(32) NULL') -- add job column
-            end
-        end
-	end)
     print("Renzu Jobs LOADED")
 end)
 
@@ -310,7 +302,7 @@ function addMoneyOffline(identifier,amount)
 end
 
 lib.callback.register('renzu_jobs:playerlist', function (source)
-    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,name,firstname,lastname FROM users', {})
+    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,firstname,lastname FROM users', {})
     local source = tonumber(source)
     local xPlayer = GetPlayerFromId(source)
     local jobs = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
@@ -318,7 +310,7 @@ lib.callback.register('renzu_jobs:playerlist', function (source)
     local job =  xPlayer.job.name
     local done = false
     local count = 0
-    CreateThread(function() -- anti bobo
+    CreateThread(function()
         for i=1, #jobs, 1 do
             if jobs[i].job_name == job then
                 salary[tostring(jobs[i].grade)] = jobs[i]
@@ -349,8 +341,9 @@ lib.callback.register('renzu_jobs:playerlist', function (source)
         local letters = config.RandomAvatars[initials]
         if v.identifier ~= nil and v.job ~= nil and v.job == xPlayer.job.name and v.firstname ~= '' and v.firstname ~= nil then
             --table.insert(list, )
+            v.name = v.firstname..' '..v.lastname
             if jobtable[v.job] == nil then jobtable[xPlayer.job.name] = {} end
-            list[v.identifier] = {id = v.identifier, job = jobtable[v.job][tostring(v.job_grade)], name = v.name or v.firstname, firstname = v.firstname, lastname = v.lastname, image = 'https://ui-avatars.com/api/?name='..v.firstname..'+'..v.lastname..'&background='..letters.background..'&color='..letters.color..''}
+            list[v.identifier] = {id = v.identifier, job = jobtable[v.job][tostring(v.job_grade)], name = v.firstname, firstname = v.firstname, lastname = v.lastname, image = 'https://ui-avatars.com/api/?name='..v.firstname..'+'..v.lastname..'&background='..letters.background..'&color='..letters.color..''}
         end
     end
     local count = 0
@@ -612,7 +605,7 @@ lib.callback.register('renzu_jobs:setjob',function(source, grade, identifier)
                 notify = 'warning'
             end
             toPlayer.setJob(xPlayer.job.name, tonumber(grade))
-            playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,name,firstname,lastname FROM users', {})
+            playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,firstname,lastname FROM users', {})
             Wait(100)
             TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'You '..text..' '..toPlayer.name..' as a '..xPlayer.job.grade_label)
             TriggerClientEvent('renzu_jobs:notify',toPlayer.source,notify,'Job', 'You have been '..text..' by '..xPlayer.name..' to '..config.Jobs[xPlayer.job.name].grade[tonumber(grade)].label)
@@ -634,7 +627,7 @@ lib.callback.register('renzu_jobs:setjob',function(source, grade, identifier)
                 end
             end
             UpdateJob(identifier, xPlayer.job.name, tonumber(grade))
-            playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,name,firstname,lastname FROM users', {})
+            playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,firstname,lastname FROM users', {})
             Wait(100)
             
             if tonumber(jobgrade) > tonumber(grade) then
