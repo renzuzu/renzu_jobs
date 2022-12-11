@@ -10,6 +10,7 @@ AddEventHandler('esx:updatejobs', function(src,jobs)
 	if source == '' or source == nil then source = 0 end
 	if source == 0 and xPlayer.getGroup() == 'superadmin' or source == 0 and xPlayer.getGroup() == 'admin' then
 		ESX.Jobs = jobs
+		ESX.RefreshJobs()
 		print('[^2INFO^7] ESX ^5Legacy^0 Job Refreshed')
 	end
 end)
