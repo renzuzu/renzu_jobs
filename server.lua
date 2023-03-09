@@ -1348,79 +1348,13 @@ lib.callback.register('renzu_jobs:Createjob', function(source, data)
             ['@label'] = 'Recruit',
         })
         jobs[data.name] = {name = data.name, label = data.label, grades = {[1] = {job_name = data.name, grade = 1, salary = 0, label = 'Recruit', name = 'recruit', skin_male = "", skin_female = ""}, whitelisted = data.whitelisted or false}}
-        TriggerEvent('esx:updatejobs',source,jobs)
+        ESX.RefreshJobs()
         TriggerClientEvent('renzu_jobs:notify',jobs,'success','Job', 'ESX Jobs Has been Refreshed')
         return true
     else
         return false
     end
     return true
-end)
-
-RegisterCommand('job', function(source,args)
-    local source = source
-    local xPlayer = GetPlayerFromId(source)
-    if xPlayer.getGroup() == 'superadmin' or xPlayer.getGroup() == 'admin' then
-        if args[1] == 'add' and args[2] ~= nil and args[3] ~= nil then
-            SqlFunc(config.Mysql,'execute','INSERT INTO jobs (name, label, whitelisted) VALUES (@name, @label, @whitelisted)', {
-                ['@name']   = args[2],
-                ['@label']   = args[3],
-                ['@whitelisted'] = args[4] or 0
-            })
-            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'Job '..args[2]..' '..args[3]..' has been added')
-        elseif args[1] == 'add' and args[2] == nil then
-            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Job name is not defined! - example usage: /job add police Police 1')
-        elseif args[1] == 'add' and args[2] ~= nil and args[3] == nil then
-            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', 'Job Label is not defined! - example usage: /job add police Police 1')
-        elseif args[1] == 'grade' and args[2] ~= nil and args[3] ~= nil and args[4] ~= nil then
-            SqlFunc(config.Mysql,'execute','INSERT INTO job_grades (job_name, grade, name, label) VALUES (@job_name, @grade, @name, @label)', {
-                ['@job_name']   = args[2],
-                ['@grade']   = args[3],
-                ['@name'] = string.gsub(args[4], "%s+", ""):lower(),
-                ['@label'] = args[4],
-            })
-            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'Job Grade '..args[3]..' ('..args[4]..') has been added to '..args[2])
-        elseif args[1] == 'grade' and args[2] == nil then
-            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', '(string) Job name is not defined! - example usage: /job grade police 1 Officer')
-        elseif args[1] == 'grade' and args[2] ~= nil and args[3] == nil then
-            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', '(int) Job grade is not defined! - example usage: /job grade police 1 Officer')
-        elseif args[1] == 'grade' and args[2] ~= nil and args[3] ~= nil and args[4] == nil then
-            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'error','Job', '(string) Job Label is not defined! - example usage: /job grade police 1 Officer')
-        else
-            TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'info','Job', 'Job adder example:<br> /job add police Police 1 <br> Job grade adder example usage: <br>/job grade police 1 Officer')
-        end
-    end
-end, false)
-
-RegisterCommand('jobrefresh', function(source,args)
-    local source = source
-    local xPlayer = GetPlayerFromId(source)
-    if xPlayer.getGroup() == 'superadmin' or xPlayer.getGroup() == 'admin' then
-        local Jobs = {}
-        local jobs = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM jobs', {})
-        for k,v in ipairs(jobs) do
-            Jobs[v.name] = v
-            Jobs[v.name].grades = {}
-        end
-        local jobGrades = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
-        for k,v in ipairs(jobGrades) do
-            if Jobs[v.job_name] then
-                Jobs[v.job_name].grades[tostring(v.grade)] = v
-            else
-                print(('[^3WARNING^7] Ignoring job grades for ^5"%s"^0 due to missing job'):format(v.job_name))
-            end
-        end
-
-        for k2,v2 in pairs(Jobs) do
-            if ESX.Table.SizeOf(v2.grades) == 0 then
-                Jobs[v2.name] = nil
-                print(('[^3WARNING^7] Ignoring job ^5"%s"^0due to no job grades found'):format(v2.name))
-            end
-        end
-        ESX.Jobs = Jobs
-        TriggerEvent('esx:updatejobs',source,Jobs)
-        TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'ESX Jobs Has been Refreshed')
-    end
 end)
 
 cb2 = function(data)
