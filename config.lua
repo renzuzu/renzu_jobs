@@ -3,6 +3,7 @@ config = {}
 config.Mysql = 'mysql-async' -- "ghmattisql", "mysql-async", oxmysql
 config.esx = '1.2' -- 1.1 or 1.2 , 1.2 are v1final and esx legacy is compatible
 config.logo = 'https://forum.cfx.re/uploads/default/original/4X/b/1/9/b196908c7e5dfcd60aa9dca0020119fa55e184cb.png' -- url of logo
+config.enableInteractions = false -- custom menu for jobs you need to setup
 config.keybinds = 'F6' -- Keybinds
 config.commands = 'interaction'
 config.useOxInventory = true -- https://github.com/overextended/ox_inventory will disable all built in inventory of renzu_jobs, and will use the ox_inventory data
@@ -109,6 +110,99 @@ config.MoneyWash = {
     [2] = {coord = vector4(1123.9632568359,-3194.3732910156,-40.397888183594,15.791656494141), inuse = false},
     [3] = {coord = vector4(1125.5310058594,-3194.3220214844,-40.397579193115,0.35743966698647), inuse = false},
     [4] = {coord = vector4(1126.9295654297,-3194.3625488281,-40.397869110107,354.97473144531), inuse = false},
+}
+
+config.turfwarduration = 1800
+config.gangsonly = {
+    ['blacklist'] = {
+        [1] = 'police',
+        [2] = 'ambulance',
+        [3] = 'mechanic',
+    }
+}
+config.Turfs = {
+    ['ballas'] = {
+        schedule = 16, -- 10am
+        Points = {
+            Trigger = {label = 'Occupy the Territorry', coord = vec3(4.3434906005859,-1816.1579589844,29.15265083313), event = 'renzu_jobs:turfoccupy'},
+            vault = {label = 'Open Vault', coord = vec3(-1.5524260997772,-1811.7775878906,29.152671), event = 'renzu_jobs:openvault'},
+            stash = {label = 'Open Stash', coord = vec3(2.5972168445587,-1818.2747802734,29.152669), event = 'renzu_jobs:openstash'},
+            wardrobe = {label = 'Wardrobe', coord = vec3(-2.6590201854706,-1822.1362304688,29.547), event = 'illenium-appearance:clothingShop'},
+            garage = {label = 'Garage', coord = vec3(18.048776626587,-1820.9528808594,24.93521881), event = 'renzu_jobs:garage'},
+        },
+        garage = {
+            [1] = vec4(9.0603952407837,-1829.4465332031,24.267120361328,53.126110076904), -- points of spawns
+        },
+        reward = function()
+            local items = {
+                [1] = {item = 'black_money', amount = math.random(50000,250000)},
+                [2] = {item = 'weapon_pistol50', amount = math.random(1,5)},
+                [3] = {item = 'thermite_bomb', amount = math.random(1,5)},
+                [4] = {item = 'weapon_combatpdw', amount = math.random(1,3)}
+            }
+            return items
+        end,
+        location = {
+            radius = 200,
+            coord = vec3(-2.6590201854706,-1822.1362304688,29.54734992)
+        },
+    },
+
+    ['triads'] = {
+        schedule = 22, -- 10am
+        Points = {
+            Trigger = {label = 'Occupy the Territorry', coord = vec3(-652.87713623047,-1227.1003417969,11.415771484375), event = 'renzu_jobs:turfoccupy'},
+            vault = {label = 'Open Vault', coord = vec3(-644.42608642578,-1244.6248779297,11.992594718933), event = 'renzu_jobs:openvault'},
+            stash = {label = 'Open Stash', coord = vec3(-653.27209472656,-1230.4202880859,11.972341537476), event = 'renzu_jobs:openstash'},
+            wardrobe = {label = 'Wardrobe', coord = vec3(-644.57061767578,-1240.7489013672,10.551615715027), event = 'illenium-appearance:clothingShop'},
+            garage = {label = 'Garage', coord = vec3(-639.03570556641,-1216.9759521484,10.763083457947), event = 'renzu_jobs:garage'},
+        },
+        garage = {
+            [1] = vec4(-645.62237548828,-1214.7133789063,10.752819061279,307.67645263672), -- points of spawns
+        },
+        reward = function()
+            local items = {
+                [1] = {item = 'black_money', amount = math.random(50000,250000)},
+                [2] = {item = 'weapon_assaultrifle', amount = math.random(1,3)},
+                [3] = {item = 'weapon_pistol50', amount = math.random(1,5)},
+                [4] = {item = 'drill', amount = math.random(1,5)}
+            }
+            return items
+        end,
+        location = {
+            radius = 200,
+            coord = vec3(-651.07885742188,-1235.505859375,10.551615715027)
+        },
+    },
+
+    ['lostmc'] = {
+        schedule = 10, -- 10am
+        Points = {
+            Trigger = {label = 'Occupy the Territorry', coord = vec3(985.09796142578,-89.706344604492,74.216796875), event = 'renzu_jobs:turfoccupy'},
+            vault = {label = 'Open Vault', coord = vec3(977.24432373047,-104.55417633057,75.045974731445), event = 'renzu_jobs:openvault'},
+            stash = {label = 'Open Stash', coord = vec3(987.21447753906,-93.189483642578,74.170722961426), event = 'renzu_jobs:openstash'},
+            wardrobe = {label = 'Wardrobe', coord = vec3(971.17047119141,-98.629028320313,74.742683410645), event = 'illenium-appearance:clothingShop'},
+            garage = {label = 'Garage', coord = vec3(-969.64471435547,-114.96347808838,73.353096008301), event = 'renzu_jobs:garage'},
+        },
+        garage = {
+            [1] = vec4(956.90362548828,-134.17512512207,73.876251220703,331.28622436523), -- points of spawns
+        },
+        reward = function()
+            local items = {
+                [1] = {item = 'black_money', amount = math.random(50000,250000)},
+                [2] = {item = 'weapon_heavypistol', amount = math.random(1,5)},
+                [2] = {item = 'weapon_pistol50', amount = math.random(1,5)},
+                [2] = {item = 'c4_bomb', amount = math.random(1,5)}
+            }
+            return items
+        end,
+        location = {
+            radius = 200,
+            coord = vec3(980.27868652344,-100.72853088379,75.278907775879)
+        },
+    },
+
+
 }
 -- JOB Config
 -- SAMPLE CONFIG

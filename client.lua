@@ -18,6 +18,7 @@ Citizen.CreateThread(function()
     Wait(2000)
     PlayerData = ESX.GetPlayerData()
     CreateJobThreads()
+    TurfThread()
 end)
 
 RegisterNetEvent('esx:setJob', function(job)
@@ -54,14 +55,19 @@ end
 
 local invcache = {}
 local jobinvcache = {}
-function OpenInventory(job,type)
+function OpenInventory(job,type,inventory)
     local job = PlayerData.job.name
     if config.useOxInventory then
-        local stash = lib.callback.await('renzu_jobs:AddStash', false, job, type)
-        if type == 'Personal' then
-            type = PlayerData.identifier
+        local stash = lib.callback.await('renzu_jobs:AddStash', false, job, type, inventory)
+        local id = type
+        if inventory ~= 'public_inventory' then
+            if type == 'Personal' then
+                type = PlayerData.identifier
+            else
+                id = ''..job..'_'..type..''
+            end
         end
-        TriggerEvent('ox_inventory:openInventory', 'stash', {id = ''..job..'_'..type..'', name = ''..job..'_'..type..'', slots = 70, weight = 1000000, coords = GetEntityCoords(cache.ped)})
+        TriggerEvent('ox_inventory:openInventory', 'stash', {id = id, name = ''..job..'_'..type..'', slots = 70, weight = 1000000, coords = GetEntityCoords(cache.ped)})
     else
         lib.callback('renzu_jobs:getPlayerInventory', false, function(inventory)
             SendNUIMessage({
@@ -390,7 +396,6 @@ end)
 
 RegisterNUICallback('setcomponents', function(data, cb)
     local weapon = GetSelectedPedWeapon(cache.ped)
-    print(weapon)
     if weapon ~= GetHashKey(data.weapon) then
         exports.ox_inventory:useSlot(tonumber(data.slot))
         Wait(1000)
@@ -405,10 +410,8 @@ RegisterNUICallback('setcomponents', function(data, cb)
     local t = {hash = componenthash, name = data.component}
     lib.callback("renzu_jobs:setweaponcomponents", false, function(a)
         --OpenWeaponMenu()
-        print(data.slot)
         cb(a)
     end,data.weapon,t,data.slot)
-    print(data.weapon,t,data.slot,data.component,componenthash, type(t))
 end)
 
 RegisterNUICallback('changesalary', function(data, cb)
@@ -479,9 +482,9 @@ RegisterNetEvent('renzu_jobs:updatemoney', function(data)
     })
 end)
 
-RegisterNetEvent('renzu_jobs:openinventory', function(type)
+RegisterNetEvent('renzu_jobs:openinventory', function(type,job,inventory)
     local job = PlayerData.job.name
-    OpenInventory(job,type)
+    OpenInventory(job,type,inventory)
 end)
 
 RegisterNetEvent('renzu_jobs:openbossmenu', function()
@@ -556,7 +559,7 @@ end
 JobZone = {}
 JobZone.Spheres = {}
 JobZone.__index = {}
-JobZone.Add = function(coord,msg,event,server,var,job)
+JobZone.Add = function(coord,msg,event,server,var,job,dist)
 	if not config.Oxlib then return end
 	function onEnter(self)
 		CreateThread(function() -- create thread to suport multi zones
@@ -586,7 +589,6 @@ end
 
 RegisterNetEvent('renzu_jobs:washroom', function(string)
 	DoScreenFadeOut(500)
-    print(string,'gago')
     Wait(1000)
     SetEntityCoords(cache.ped,config.moneywashcoord[string])
     Wait(500)
@@ -631,7 +633,6 @@ RegisterNetEvent('renzu_jobs:washuse', function(id, bool)
             local count = 0
             while count < 60 do
                 count = count + 1
-                print(count)
                 Wait(1000)
             end
         end)
@@ -672,7 +673,7 @@ CreateJobThreads = function()
     for k2,data in pairs(config.Jobs) do
         if data['public_inventory'] then
             for k,v in pairs(data['public_inventory']) do
-                JobZone.Add(v.coord,v.label,v.event,false,{k,k2})
+                JobZone.Add(v.coord,v.label,v.event,false,{k,k2,'public_inventory'},1.5)
             end
         end
         if data['shop'] then
@@ -700,7 +701,7 @@ end
 
 RegisterNetEvent('renzu_jobs:openwardrobe', function(job)
     if config.renzu_Clothes then
-        exports.renzu_clothes:OpenClotheInventory()
+        exports.renzu_clothes:OpenClotheInventory() 
     else
         OpenClotheMenu(false,false,{
             'tshirt_1', 'tshirt_2',
@@ -1041,7 +1042,6 @@ function OxMenuInteraction()
                     local title = config[v.type][v.index].label
                     local event = config[v.type][v.index].name
                     local icon = config[v.type][v.index].icons
-                    print(icon)
                     hasmenu = true
                     table.insert(menus,{label = title, description = config[v.type][v.index].description, args = {event = event, server = false, val = 'ulol'},  icon = icon})
                 end
@@ -1052,20 +1052,9 @@ function OxMenuInteraction()
                     title = title,
                     position = 'top-right',
                     disableInput = false,
-                    onSideScroll = function(selected, scrollIndex, args)
-                        print(selected, scrollIndex, args)
-                    end,
-                    onSelected = function(selected, scrollIndex, args)
-                        print(selected, scrollIndex, args,2)
-                    end,
-                    onClose = function()
-                        print('Menu closed')
-                        lib.showMenu('some_menu_id')
-                    end,
                     options = menus
                 }, function(selected, scrollIndex, args)
                     TriggerEvent(args.event,args.val)
-                    print(selected, scrollIndex, args,'entered')
                 end)
             end
         end
@@ -1073,22 +1062,12 @@ function OxMenuInteraction()
             lib.registerMenu({
                 id = 'oxmenu',
                 title = 'Interactions',
-            position = 'top-right',
-            disableInput = false,
-                onSideScroll = function(selected, scrollIndex, args)
-                    print(selected, scrollIndex, args)
-                end,
-                onSelected = function(selected, scrollIndex, args)
-                    print(selected, scrollIndex, args,2)
-                end,
-                onClose = function()
-                    print('Menu closed')
-                end,
+                position = 'top-right',
+                disableInput = false,
                 options = firstmenu
             }, function(selected, scrollIndex, args)
                 --TriggerEvent(args.event,args.val)
                 lib.showMenu(args.val)
-                print(selected, scrollIndex, args,'entered')
             end)
             lib.showMenu('oxmenu')
         end
@@ -1159,6 +1138,7 @@ Createnewgrade = function(job,grade,label)
 end
 
 Citizen.CreateThread(function()
+    if not config.enableInteractions then return end
     while not config.success do Wait(1) end
     RegisterKeyMapping(config.commands, 'Interaction Menu', 'keyboard', config.keybinds)
     RegisterCommand(config.commands, function(source, args, rawCommand)
@@ -1174,4 +1154,237 @@ RegisterNetEvent('renzu_jobs:notify',function(type,title,message)
         description = message,
         type = type
     })
+end)
+
+-- TURF WARS
+
+SetRespawnTimer = function(radius)
+    Wait(15000)
+    local coord = GetEntityCoords(cache.ped)
+    coord = vec3(coord.x-radius,coord.y+radius,coord.z+99.0)
+    local found, z = GetGroundZFor_3dCoord(coord.x,coord.y,coord.z,true)
+    SetEntityCoords(cache.ped,coord.x,coord.y,z)
+    TriggerEvent('esx_ambulancejob:revive')
+end
+
+local inturfzone = false
+StartTurfWar = function(id)
+    local location = config.Turfs[id].location
+    local blip = AddBlipForCoord(location.coord.x,location.coord.y,location.coord.z)
+    SetBlipSprite(blip,310)
+    SetBlipColour(blip,1)
+    local blipradius = nil
+    function onEnter(self)
+        inturfzone = true
+        blipradius = AddBlipForRadius(location.coord.x,location.coord.y,location.coord.z,location.radius+0.0)
+        SetBlipColour(blipradius,1)
+        SetBlipAlpha(blipradius,64)
+        Citizen.CreateThreadNow(function()
+            while inturfzone do
+                if LocalPlayer.state.isdead then
+                    SetRespawnTimer(location.radius-100)
+                end
+                SendNUIMessage({
+                    type = 'turftimer',
+                    time = GlobalState.TurfTime,
+                    show = true,
+                })
+                Wait(1000)
+            end
+        end)
+    end
+    
+    function onExit(self)
+        inturfzone = false
+        SendNUIMessage({
+            type = 'turftimer',
+            show = false
+        })
+        if GlobalState.Turfs[GlobalState.TurfActive] and PlayerData.identifier == GlobalState.Turfs[GlobalState.TurfActive].triggerby and GlobalState.TurfActive and GlobalState.OngoingTurfwar[GlobalState.TurfActive] then
+            lib.callback.await('renzu_jobs:removeturf',false, GlobalState.TurfActive)
+        end
+        if DoesBlipExist(blipradius) then
+            RemoveBlip(blipradius)
+        end
+        if DoesBlipExist(blip) then
+            RemoveBlip(blip)
+        end
+    end
+    
+    function inside(self)
+
+    end
+
+    local sphere = lib.zones.sphere({
+        coords = location.coord,
+        radius = location.radius,
+        debug = true,
+        inside = inside,
+        onEnter = onEnter,
+        onExit = onExit
+    })
+    Citizen.CreateThreadNow(function()
+        while GlobalState.TurfTime > 0 do Wait(1000) end
+        inturfzone = false
+        Wait(2000)
+        SendNUIMessage({
+            type = 'turftimer',
+            show = false
+        })
+        sphere:remove()
+    end)
+end
+
+TurfPoints = function(data,territorry)
+    local point = lib.points.new(data.coord, 2, {
+        turf = territorry,
+        data = data
+    })
+    
+    function point:onEnter()
+        lib.showTextUI('[E] - '..data.label)
+    end
+    
+    function point:onExit()
+        lib.hideTextUI()
+    end
+    
+    function point:nearby()
+        DrawMarker(2, self.coords.x, self.coords.y, self.coords.z, 0.0, 0.0, 0.0, 0.0, 180.0, 0.0, 0.4, 0.4, 0.4, 200, 20, 20, 50, false, true, 2, nil, nil, false)
+        if self.currentDistance < 1 and IsControlJustReleased(0, 38) then
+            TriggerEvent(self.data.event,self.data,self.turf)
+        end
+    end
+end
+
+TurfThread = function()
+    CreateThread(function()
+        Wait(100)
+        for k,v in pairs(config.Turfs) do
+            for k2,v in pairs(v.Points) do
+                TurfPoints(v,k)
+            end
+        end
+    end)
+end
+
+AddStateBagChangeHandler("TurfActive", "global", function(bagName, key, value)
+    if not value then return end
+    Wait(1000)
+    StartTurfWar(value)
+end)
+
+CreateThread(function()
+    while PlayerData.job == nil do Wait(1111) end
+    Wait(1000)
+    if GlobalState.TurfActive then
+        StartTurfWar(GlobalState.TurfActive)
+    end
+end)
+
+RegisterNetEvent('renzu_jobs:garage', function(data,id)
+    if GlobalState.Turfs[id] and GlobalState.Turfs[id].owner == PlayerData.job.name then
+        TriggerEvent('renzu_garage:property', id..'_turf', data.coord, config.Turfs[id].garage[1])
+    else
+        lib.notify({
+            title = 'Turf',
+            description = 'You dont have permission',
+            type = 'error'
+        })
+    end
+end)
+
+RegisterNetEvent('renzu_jobs:openstash', function(data,id)
+    if GlobalState.Turfs[id] and GlobalState.Turfs[id].owner == PlayerData.job.name then
+        local stash = lib.callback.await('renzu_jobs:AddStash', false, '', 'turf_'..id, 'public_inventory')
+        TriggerEvent('ox_inventory:openInventory', 'stash', {id = 'turf_'..id, name = 'Turf Storage', slots = 100, weight = 2000000, coords = GetEntityCoords(cache.ped)})
+    else
+        lib.notify({
+            title = 'Turf',
+            description = 'You dont have permission',
+            type = 'error'
+        })
+    end
+end)
+
+RegisterNetEvent('renzu_jobs:openvault', function(data,id)
+    ExecuteCommand('e mechanic2')
+    if lib.progressBar({
+        duration = math.random(5000,10000),
+        label = 'Opening Vault',
+        useWhileDead = false,
+        canCancel = true,
+        disable = {
+            car = true,
+        },
+    }) and GlobalState.Turfs[id] and GlobalState.Turfs[id].owner == PlayerData.job.name and not GlobalState.TurfActive then
+        lib.callback.await('renzu_jobs:openVault', false, id)
+        ClearPedTasks(cache.ped)
+    else
+        lib.notify({
+            title = 'Turf',
+            description = 'You dont have permission',
+            type = 'error'
+        })
+    end
+end)
+
+RegisterNetEvent('renzu_jobs:turfoccupy', function(data,territorry)
+    if not GlobalState.TurfActive then
+        lib.notify({
+            title = 'Turf War',
+            description = 'Turf War in this Location is Inactive',
+            type = 'error'
+        })
+        return
+    end
+    if config.gangsonly['blacklist'][PlayerData.job.name] then 
+        lib.notify({
+            title = 'Turf War',
+            description = 'Your occupation cannot do turf war raid',
+            type = 'error'
+        })
+        return 
+    end
+    if GlobalState.Turfs[territorry] and GlobalState.Turfs[territorry].owner ~= PlayerData.job.name or not GlobalState.Turfs[territorry] then
+        ExecuteCommand('e mechanic2')
+        local coord = GetEntityCoords(cache.ped)
+        CreateThread(function()
+            while #(coord - GetEntityCoords(cache.ped)) < 15 do
+                Wait(111)
+            end
+            lib.cancelProgress()
+        end)
+        if lib.progressBar({
+            duration = 60000,
+            label = 'Occupying Terittory',
+            useWhileDead = false,
+            canCancel = true,
+            disable = {
+                car = true,
+                move = true,
+                combat = true,
+            }
+        }) then
+            lib.callback.await('renzu_jobs:OccupyTeritorry', false, territorry)
+            lib.notify({
+                title = 'Turf War',
+                description = 'Teritorry has been Occupied',
+                type = 'success'
+            })
+        end
+        occupying = false
+    else
+        lib.notify({
+            title = 'Turf War',
+            description = 'You already owned this turf',
+            type = 'success'
+        })
+    end
+end)
+
+RegisterNetEvent('esx:onPlayerDeath', function(data)
+    if GlobalState.Turfs[GlobalState.TurfActive] and PlayerData.identifier == GlobalState.Turfs[GlobalState.TurfActive].triggerby and GlobalState.TurfActive and GlobalState.OngoingTurfwar[GlobalState.TurfActive] then
+        lib.callback.await('renzu_jobs:removeturf',false, GlobalState.TurfActive)
+    end
 end)

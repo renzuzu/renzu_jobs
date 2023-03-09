@@ -4,7 +4,8 @@ ESX = exports['es_extended']:getSharedObject()
 local loaded = false
 local jobtable = {}
 playerinfo = {}
-
+GlobalState.Turfs = json.decode(GetResourceKvpString('Turfs') or '[]') or {}
+GlobalState.OngoingTurfwar = {}
 lib.callback.register('renzu_jobs:getConfig', function(source)
     return config
 end)
@@ -12,12 +13,11 @@ end)
 CreateThread(function()
     Wait(200)
     local registeredjobs = {}
-    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,firstname,lastname FROM users', {})
+    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,firstname,lastname,job_grade FROM users', {})
     jobsclass = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
     existing = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM renzu_jobs', {})
     
     for k,v in pairs(jobsclass) do
-        
         if jobtable[v.job_name] == nil then jobtable[v.job_name] = {} end
         if jobtable[v.job_name][tostring(v.grade)] == nil then jobtable[v.job_name][tostring(v.grade)] = v.label end
     end
@@ -39,14 +39,18 @@ CreateThread(function()
 end)
 
 -- Register this stash only when this event is called
-lib.callback.register('renzu_jobs:AddStash', function(source, job, type)
+lib.callback.register('renzu_jobs:AddStash', function(source, job, type, inventory)
     local xPlayer = GetPlayerFromId(source)
     local name = type
-    if type == 'Personal' then
-        type = xPlayer.identifier
+    local id = type
+    if inventory ~= 'public_inventory' then
+        if type == 'Personal' then
+            type = PlayerData.identifier
+        else
+            id = ''..job..'_'..type..''
+        end
     end
-    print(job, type)
-	return exports.ox_inventory:RegisterStash(''..job..'_'..type..'', name, 70, 1000000, type == 'Personal' and true or false)
+	return exports.ox_inventory:RegisterStash(id, name, 70, 1000000, type == 'Personal' and true or false)
 end)
 
 function JobMoney(job,paycheck)
@@ -302,7 +306,7 @@ function addMoneyOffline(identifier,amount)
 end
 
 lib.callback.register('renzu_jobs:playerlist', function (source)
-    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,firstname,lastname FROM users', {})
+    playerinfo = SqlFunc(config.Mysql,'fetchAll','SELECT identifier,job,firstname,lastname,job_grade FROM users', {})
     local source = tonumber(source)
     local xPlayer = GetPlayerFromId(source)
     local jobs = SqlFunc(config.Mysql,'fetchAll','SELECT * FROM job_grades', {})
@@ -340,10 +344,9 @@ lib.callback.register('renzu_jobs:playerlist', function (source)
         local initials = math.random(1,#config.RandomAvatars)
         local letters = config.RandomAvatars[initials]
         if v.identifier ~= nil and v.job ~= nil and v.job == xPlayer.job.name and v.firstname ~= '' and v.firstname ~= nil then
-            --table.insert(list, )
             v.name = v.firstname..' '..v.lastname
             if jobtable[v.job] == nil then jobtable[xPlayer.job.name] = {} end
-            list[v.identifier] = {id = v.identifier, job = jobtable[v.job][tostring(v.job_grade)], name = v.firstname, firstname = v.firstname, lastname = v.lastname, image = 'https://ui-avatars.com/api/?name='..v.firstname..'+'..v.lastname..'&background='..letters.background..'&color='..letters.color..''}
+            list[v.identifier] = {online = ESX.GetPlayerFromIdentifier(v.identifier) or false, id = v.identifier, job = jobtable[v.job][tostring(v.job_grade)], name = v.firstname, firstname = v.firstname, lastname = v.lastname, image = 'https://ui-avatars.com/api/?name='..v.firstname..'+'..v.lastname..'&background='..letters.background..'&color='..letters.color..''}
         end
     end
     local count = 0
@@ -893,7 +896,6 @@ lib.callback.register('renzu_jobs:setweaponcomponents', function(source, weapon,
     local xPlayer    = GetPlayerFromId(source)
     local component = component
     local weapon = tostring(weapon)
-    print(weapon, component, slot, type(compo))
     if xPlayer.hasWeaponComponent(weapon, component, slot) then
         xPlayer.removeWeaponComponent(weapon, component, slot)
         return cb(true)
@@ -1174,7 +1176,6 @@ lib.callback.register('renzu_jobs:washmoney', function(source, amount, id)
                 local tax = Round(tonumber(amount) * config.MoneyWashTax)
                 xPlayer.addMoney(money)
                 addMoney(tonumber(tax),config.MoneyWashOwner,src,'money')
-                print('sending washed money',money)
                 TriggerClientEvent('renzu_jobs:notify',xPlayer.source,'success','Job', 'Money is Successfuly Washed')
             else
                 local money = Round(tonumber(amount) * (1-config.MoneyWashTax))
@@ -1427,4 +1428,123 @@ cb2 = function(data)
 end
 cb = function(...)
     return cb2({...})
+end
+
+-- TURF WARS
+GlobalState.TurfActive = false
+lib.callback.register('renzu_jobs:OccupyTeritorry',function(source,id)
+    local turfs = GlobalState.Turfs
+    local xPlayer = GetPlayerFromId(source)
+    turfs[id] = {owner = xPlayer.job.name, ownerlabel = xPlayer.job.label, triggerby = xPlayer.identifier}
+    GlobalState.Turfs = turfs
+    local turfname = id:upper()
+    local jobname = xPlayer.job.label
+    TriggerClientEvent('renzu_jobs:notify',-1,'inform','TURF WAR',  id..' has been Occupied by '..xPlayer.name..' ('..xPlayer.job.label..')')
+end)
+
+lib.callback.register('renzu_jobs:openVault',function(source,id)
+    local turfs = GlobalState.Turfs
+    local xPlayer = GetPlayerFromId(source)
+    if turfs[id].owner == xPlayer.job.name and not turfs[id].vault then
+        for k,v in pairs(config.Turfs[id].reward()) do
+            xPlayer.addInventoryItem(v.item,v.amount)
+            turfs[id].vault = true
+        end
+        GlobalState.Turfs = turfs
+        SetResourceKvp('Turfs', json.encode(GlobalState.Turfs))
+        TriggerClientEvent('renzu_jobs:notify',-1,'inform','TURF WAR',  id..' Reward Vault has been Claimed by '..xPlayer.name..' ('..xPlayer.job.label..')')
+    elseif turfs[id].owner == xPlayer.job.name and turfs[id].vault then
+        TriggerClientEvent('renzu_jobs:notify',-1,'inform','TURF WAR',  id..' Reward is Already Claimed')
+    end
+end)
+
+lib.callback.register('renzu_jobs:removeturf',function(source,id)
+    local turfs = GlobalState.Turfs
+    local xPlayer = GetPlayerFromId(source)
+    turfs[id] = nil
+    GlobalState.Turfs = turfs
+    local turfname = id:upper()
+    local jobname = xPlayer.job.label
+    TriggerClientEvent('renzu_jobs:notify',-1,'inform','TURF WAR', id..' can be occupied again, Reason: Owner Died ('..xPlayer.name..') recently owned by '..jobname)
+end)
+
+RegisterNetEvent('esx_multicharacter:relog', function()
+	local source = source
+	local xPlayer = GetPlayerFromId(source)
+    local active = GlobalState.TurfActive
+    if active then
+        local turfs = GlobalState.Turfs
+        if turfs[active] and turfs[active].triggerby == xPlayer.identifier then
+            turfs[active] = nil
+            GlobalState.Turfs = turfs
+            TriggerClientEvent('renzu_jobs:notify',-1,'inform','TURF WAR', active:upper()..' can be occupied again, Reason: Owner Disconnected ('..xPlayer.name..') recently owned by '..xPlayer.job.name)
+        end
+    end
+end)
+
+RegisterNetEvent("playerDropped",function()
+	local source = source
+	local xPlayer = GetPlayerFromId(source)
+    local active = GlobalState.TurfActive
+    if active then
+        local turfs = GlobalState.Turfs
+        if turfs[active] and turfs[active].triggerby == xPlayer.identifier then
+            turfs[active] = nil
+            GlobalState.Turfs = turfs
+            TriggerClientEvent('renzu_jobs:notify',-1,'inform','TURF WAR', active:upper()..' can be occupied again, Reason: Owner Disconnected ('..xPlayer.name..') recently owned by '..xPlayer.job.name)
+        end
+    end
+end)
+
+CreateThread(function()
+    while true do
+        local time = os.date("*t")
+        for k,v in pairs(config.Turfs) do
+            if v.schedule == time.hour and time.min == 0 and time.sec == 1 then
+                StartTurfWar(k)
+            end
+        end
+        Wait(1000)
+    end
+end)
+
+StartTurfWar = function(id)
+    local turf = id
+    local ongoing = GlobalState.OngoingTurfwar
+    ongoing[turf] = true
+    GlobalState.OngoingTurfwar = ongoing
+    GlobalState.TurfActive = turf
+    local id = turf:upper()
+    local turfs = GlobalState.Turfs
+    turfs[turf] = nil
+    GlobalState.Turfs = turfs
+    GlobalState.TurfTime = config.turfwarduration
+    TriggerClientEvent('renzu_jobs:notify',-1,'inform','TURF WAR', id..' Turf War has begin')
+    Citizen.CreateThread(function()
+        while true do
+            GlobalState.TurfTime -= 1
+            if GlobalState.TurfTime <= 0 then
+                local owner = 'None'
+                local turfs = GlobalState.Turfs
+                if turfs[turf] then
+                    turfs[turf].vault = false
+                end
+                GlobalState.Turfs = turfs
+                if GlobalState.Turfs[turf] and GlobalState.Turfs[turf].ownerlabel then
+                    owner = GlobalState.Turfs[turf].ownerlabel
+                else
+                    GlobalState.Turfs[turf] = nil
+                end
+                SetResourceKvp('Turfs', json.encode(GlobalState.Turfs))
+                GlobalState.TurfActive = nil
+                if owner ~= 'None' then
+                    TriggerClientEvent('renzu_jobs:notify',-1,'inform','TURF WAR', id..' Turf Has Been Successfully Occupied by '..owner)
+                else
+                    TriggerClientEvent('renzu_jobs:notify',-1,'inform','TURF WAR', id..' Turf Has Ended. Owner: None')
+                end
+                break
+            end
+            Wait(1000)
+        end
+    end)
 end
