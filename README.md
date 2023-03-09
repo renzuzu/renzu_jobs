@@ -109,6 +109,7 @@ AddEventHandler('esx:updatejobs', function(src,jobs)
 	if source == '' or source == nil then source = 0 end
 	if source == 0 and xPlayer.getGroup() == 'superadmin' or source == 0 and xPlayer.getGroup() == 'admin' then
 		ESX.Jobs = jobs
+		ESX.RefreshJobs()
 		print('[^2INFO^7] ESX ^5Legacy^0 Job Refreshed')
 	end
 end)
@@ -192,15 +193,3 @@ config.vehicle_interaction = {
 
 > name for client files must start with cl_ and sv_ for server
 [/details]
-
-
-
-# TODO
-- Blackmoney Support in Inventory (i forgot silly me) ✔️
-- Simple Dispatch System (discord channel style)
-- Support Black money requirements in shop
-- Ingame Job Adder/Creator ✔️
-- Gangwar Feature
-- Raid Feature
-- Odd Job / Task for Each Job/gangs
-- Weapon Tints @ Armory
