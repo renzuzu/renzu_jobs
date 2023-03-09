@@ -96,24 +96,6 @@ config.inventoryImageUrl = 'https://cfx-nui-'..config.inventory..'/html/img/item
 ![image](https://user-images.githubusercontent.com/82306584/204890182-14deee04-fca0-4d98-bb4e-946831c5488c.png)
 ![image](https://user-images.githubusercontent.com/82306584/204890268-202e9596-92eb-406f-93e1-e41c378606b3.png)
 
-- in able to use newly added jobs from jobs creator command, you need to trigger the command to refresh the job list of ESX.Jobs
-
-- files needed to Edit ( es_extended/server/main.lua )
-- add this new code to the bottom of main.lua
-
-```
-RegisterNetEvent('esx:updatejobs')
-AddEventHandler('esx:updatejobs', function(src,jobs)
-	local source = source
-	local xPlayer = ESX.GetPlayerFromId(src)
-	if source == '' or source == nil then source = 0 end
-	if source == 0 and xPlayer.getGroup() == 'superadmin' or source == 0 and xPlayer.getGroup() == 'admin' then
-		ESX.Jobs = jobs
-		print('[^2INFO^7] ESX ^5Legacy^0 Job Refreshed')
-	end
-end)
-```
-
 # Money Wash
 - Preconfigured Money wash using IPL
 - Default 4 available Washing slot
@@ -192,15 +174,3 @@ config.vehicle_interaction = {
 
 > name for client files must start with cl_ and sv_ for server
 [/details]
-
-
-
-# TODO
-- Blackmoney Support in Inventory (i forgot silly me) ✔️
-- Simple Dispatch System (discord channel style)
-- Support Black money requirements in shop
-- Ingame Job Adder/Creator ✔️
-- Gangwar Feature
-- Raid Feature
-- Odd Job / Task for Each Job/gangs
-- Weapon Tints @ Armory
