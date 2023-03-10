@@ -1316,14 +1316,15 @@ lib.callback.register('renzu_jobs:Addgrade', function(source, data)
     local xPlayer = GetPlayerFromId(source)
     local jobs = ESX.Jobs
     if not ESX.Jobs[data.name] then
-        SqlFunc(config.Mysql,'execute','INSERT INTO job_grades (job_name, grade, name, label) VALUES (@job_name, @grade, @name, @label)', {
+        SqlFunc(config.Mysql,'execute','INSERT INTO job_grades (job_name, grade, name, label, salary) VALUES (@job_name, @grade, @name, @label, @salary)', {
             ['@job_name']   = data.job,
             ['@grade']   = data.grade,
             ['@name'] = string.gsub(data.label, "%s+", ""):lower(),
             ['@label'] = data.label,
+            ['@salary'] = data.salary or 1,
         })
-        jobs[data.job].grades[data.grade] = {job_name = data.job, grade = data.grade, salary = 0, label = data.label, name = string.gsub(data.label, "%s+", ""):lower(), skin_male = "", skin_female = ""}
-        TriggerEvent('esx:updatejobs',source,jobs)
+        jobs[data.job].grades[data.grade] = {job_name = data.job, grade = data.grade, salary = data.salary or 1, label = data.label, name = string.gsub(data.label, "%s+", ""):lower(), skin_male = "", skin_female = ""}
+        ESX.RefreshJobs()
         TriggerClientEvent('renzu_jobs:notify',jobs,'success','Job', 'ESX Jobs Has been Refreshed')
         return true
     else

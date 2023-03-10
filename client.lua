@@ -1125,10 +1125,11 @@ end
 Createnewgrade = function(job,grade,label)
     local input = lib.inputDialog('New job grade for '..label, {
         { type = "input", label = "Label", placeholder = "Job Label - ex: Manager" },
-        { type = "number", label = "Job grade", default = grade + 1 }
+        { type = "number", label = "Job grade", default = grade + 1 },
+        { type = "number", label = "Salary", default = 1000 }
     })
     if input and input[1] and input[2] then
-        local creategrade = lib.callback.await('renzu_jobs:Addgrade', false, {job = job, label = input[1], grade = input[2]})
+        local creategrade = lib.callback.await('renzu_jobs:Addgrade', false, {job = job, label = input[1], grade = input[2], salary = input[3]})
         if creategrade then
             TriggerEvent('renzu_jobs:notify', 'success','Job Creator', 'Successfully grade '..input[1]..' for '..job)
         end
