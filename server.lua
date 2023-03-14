@@ -45,7 +45,8 @@ lib.callback.register('renzu_jobs:AddStash', function(source, job, type, invento
     local id = type
     if inventory ~= 'public_inventory' then
         if type == 'Personal' then
-            type = PlayerData.identifier
+            type = xPlayer.identifier
+            name = ''..job..'_'..type..''
         else
             id = ''..job..'_'..type..''
         end
