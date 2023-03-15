@@ -1022,7 +1022,8 @@ end
 function OxMenuInteraction()
     local firstmenu = {}
     local tablenum = {}
-    if config.Jobs[PlayerData.job.name] and config.Jobs[PlayerData.job.name]['interaction'] then
+    if not PlayerData?.job?.name then return end
+    if config.Jobs[PlayerData?.job?.name] and config.Jobs[PlayerData?.job?.name]['interaction'] then
         for k2,v in pairs(config.Jobs[PlayerData.job.name]['interaction']) do
             for k,v in pairs(v) do
                 if not tablenum[k2] then
@@ -1066,7 +1067,6 @@ function OxMenuInteraction()
                 disableInput = false,
                 options = firstmenu
             }, function(selected, scrollIndex, args)
-                --TriggerEvent(args.event,args.val)
                 lib.showMenu(args.val)
             end)
             lib.showMenu('oxmenu')
@@ -1139,12 +1139,13 @@ Createnewgrade = function(job,grade,label)
 end
 
 Citizen.CreateThread(function()
-    if not config.enableInteractions then return end
     while not config.success do Wait(1) end
-    RegisterKeyMapping(config.commands, 'Interaction Menu', 'keyboard', config.keybinds)
+    if not config.enableInteractions then return end
+    Wait(1000)
     RegisterCommand(config.commands, function(source, args, rawCommand)
         OxMenuInteraction()
     end)
+    RegisterKeyMapping(config.commands, 'Interaction Menu', 'keyboard', config.keybinds)
 end)
 
 RegisterNetEvent('renzu_jobs:notify',function(type,title,message)
